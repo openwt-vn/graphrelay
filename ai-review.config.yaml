@@ -1,0 +1,43 @@
+# AI code review config. Reference: https://github.com/openwt-vn/ai-code-review/blob/main/docs/config.md
+provider: github
+
+auth:
+  token: ${GITHUB_TOKEN}
+  modelstackKey: ${MODELSTACK_API_KEY}
+
+paths:
+  exclude:
+    - "Cargo.lock"
+    - "benchmarks/dataset/**"
+    - "video/**"
+    - "**/*.pptx"
+    - "docs/brand/**"
+    - "**/node_modules/**"
+    - "**/dist/**"
+
+review:
+  provider: modelstack
+  model: deepseek-v4-pro
+  maxFindings: 25
+  severityThreshold: medium
+  contextPaths:
+    - ./CLAUDE.md
+    - ./CONTRIBUTING.md
+  summary:
+    mode: sticky
+
+reply:
+  provider: modelstack
+  evaluator: llm
+  # Also the review-path reflection model; must be a name ModelStack resolves.
+  model: deepseek-v4-flash-0731
+
+# ModelStack has no built-in price table; without this, cost reports as $0.
+# Approximate list prices per MTok: adjust to the real ModelStack bill.
+pricing:
+  deepseek-v4-pro:
+    inputPerMTok: 0.30
+    outputPerMTok: 1.20
+  deepseek-v4-flash-0731:
+    inputPerMTok: 0.14
+    outputPerMTok: 0.28

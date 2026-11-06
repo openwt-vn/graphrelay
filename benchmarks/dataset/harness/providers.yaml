@@ -1,0 +1,37 @@
+# Agent-model providers for harness/run.py --provider. The source-of-truth benchmark uses exactly
+# these two (see ../README.md "Source-of-truth benchmark").
+#
+# api_key_env names the *local* env var run.py reads the credential from and forwards as
+# ANTHROPIC_AUTH_TOKEN to the `claude` subprocess (never ANTHROPIC_API_KEY, which Claude Code
+# gives precedence and silently ignores for a custom base URL).
+
+# Claude Sonnet 5 on the real Anthropic API (base_url null = no override; uses your `claude`
+# login or ANTHROPIC_API_KEY as usual). Pricing is what the spend ledger / --max-spend use.
+claude-sonnet-5:
+  model: claude-sonnet-5
+  base_url: null
+  api_key_env: ANTHROPIC_API_KEY
+  pricing: {in: 3.0, out: 15.0, cache_read: 0.30, cache_write: 3.75}
+
+# Claude Sonnet 5.5 (model id claude-sonnet-5-5), same login/API path. PRICING IS A PLACEHOLDER copied
+# from Sonnet 5 (the real 5.5 price was not checked): it only affects the spend ledger / --max-spend.
+claude-sonnet-5-5:
+  model: claude-sonnet-5-5
+  base_url: null
+  api_key_env: ANTHROPIC_API_KEY
+  pricing: {in: 3.0, out: 15.0, cache_read: 0.30, cache_write: 3.75}
+
+# Z.ai GLM 5.3 Flash via OpenRouter, through the local LiteLLM proxy (harness/proxy). The proxy is
+# needed because Claude Code's CLI 404s on a `/`-containing --model slug (`z-ai/glm-5.3-flash`)
+# even though OpenRouter's own Anthropic-compatible endpoint accepts it; the proxy exposes the
+# slash-free alias below. The real OpenRouter credential lives in the proxy process's environment
+# (OPENROUTER_API_KEY), never in run.py; LITELLM_MASTER_KEY is a throwaway local bearer token.
+#
+# PRICING IS STALE: these figures were a 50%-off launch promo that ended 2026-09-09. They only
+# affect the spend ledger / --max-spend guard (a wrong number mis-states cost, not results);
+# re-check openrouter.ai/z-ai/glm-5.3-flash before trusting cost figures.
+openrouter-glm-5-3-flash:
+  model: openrouter-glm-5-3-flash
+  base_url: http://localhost:4000
+  api_key_env: LITELLM_MASTER_KEY
+  pricing: {in: 0.07125, out: 0.2375, cache_read: 0.01425, cache_write: 0.07125}

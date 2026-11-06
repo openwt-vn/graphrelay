@@ -1,0 +1,15 @@
+[package]
+name    = "benchmarks"
+license.workspace = true
+version.workspace = true
+edition.workspace = true
+description = "Indexing-time / upgrade measurement tool (offline_index). Retrieval quality is measured by the agent benchmark in benchmarks/dataset (run-sot.sh), not here."
+
+[dependencies]
+graphrelay-core   = { path = "../crates/graphrelay-core" }
+graphrelay-parser = { path = "../crates/graphrelay-parser" }
+graphrelay-store  = { path = "../crates/graphrelay-store" }
+graphrelay-watcher = { path = "../crates/graphrelay-watcher" }
+anyhow.workspace       = true
+tokio.workspace      = true
+tracing-subscriber.workspace = true

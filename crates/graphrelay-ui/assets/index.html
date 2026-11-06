@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>graphrelay</title>
+  <!-- __BASE__ is replaced at serve time with the project path prefix, e.g. /graphrelay -->
+  <script>window.BASE = '__BASE__';</script>
+  <link rel="stylesheet" href="__BASE__/assets/style.css">
+</head>
+<body>
+  <div id="sidebar">
+    <h1>graphrelay</h1>
+
+    <div id="search-panel">
+      <input id="search-input" type="text" placeholder="Search code by intent…" autocomplete="off">
+      <div id="search-results"></div>
+    </div>
+
+    <div id="inspector" hidden>
+      <div id="inspector-name"></div>
+      <div id="inspector-meta"></div>
+      <pre id="inspector-snippet"></pre>
+      <div id="inspector-callers"></div>
+      <div id="inspector-callees"></div>
+    </div>
+
+    <div id="status-bar">
+      <span id="status-dot"></span>
+      <span id="status-text">loading…</span>
+    </div>
+  </div>
+
+  <div id="graph-container">
+    <div id="cy"></div>
+    <div id="graph-controls">
+      <button id="btn-fit">Fit</button>
+      <button id="btn-reset">Reset</button>
+      <select id="lang-filter">
+        <option value="">All languages</option>
+      </select>
+    </div>
+  </div>
+
+  <script src="__BASE__/assets/vendor/cytoscape.min.js"></script>
+  <script src="__BASE__/assets/vendor/cola.min.js"></script>
+  <script src="__BASE__/assets/vendor/cytoscape-cola.min.js"></script>
+  <script src="__BASE__/assets/app.js"></script>
+</body>
+</html>

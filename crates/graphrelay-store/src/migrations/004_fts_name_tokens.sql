@@ -1,0 +1,12 @@
+-- Content-format bump for chunk_fts, not a schema change: `qualified_name`'s
+-- indexed text now also includes `tokenize_name`'s camelCase/snake_case
+-- decomposition (see GraphDb::upsert_fts_batch), so a query paraphrasing
+-- "resets the editor" can finally lexically MATCH `resetEditor` — SQLite
+-- FTS5's stock `unicode61` tokenizer treats it as one opaque token otherwise.
+--
+-- Existing rows only have the old raw-qualified-name-only text. Clear them
+-- rather than leaving half-old/half-new content sitting side by side; the
+-- startup backfill (`fts_backfill_needed` meta flag, re-triggered for this
+-- migration in run_migrations() the same way 003_lexical_fts triggers it)
+-- repopulates every row with the new enriched text.
+DELETE FROM chunk_fts;

@@ -1,0 +1,19 @@
+[package]
+name    = "graphrelay-api"
+license.workspace = true
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+graphrelay-core    = { path = "../graphrelay-core" }
+graphrelay-store   = { path = "../graphrelay-store" }
+axum.workspace        = true
+serde.workspace       = true
+serde_json.workspace  = true
+anyhow.workspace      = true
+tracing.workspace     = true
+tokio.workspace       = true
+
+[dev-dependencies]
+async-trait.workspace = true
+tower.workspace       = true

@@ -1,0 +1,9 @@
+[package]
+name    = "graphrelay-ui"
+license.workspace = true
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+rust-embed.workspace = true
+axum.workspace       = true

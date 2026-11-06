@@ -1,0 +1,16 @@
+-- Content-format bump, not a schema change: Plan 21 item 12 (retrieval
+-- audit finding) — `chunk_text` was indexed verbatim, with none of the
+-- camelCase/snake_case decomposition or stemming `qualified_name` already
+-- gets via `tokenize_name`. Measured: `chunk_text:"creat"` (the stem)
+-- matched 11 rows while `chunk_text:"create"` (the surface form) matched
+-- 5,778 — body text essentially only matched on exact surface form, so
+-- most of the graph-context text `ChunkBuilder` writes into each chunk did
+-- almost nothing for lexical matching. `GraphDb::upsert_fts_batch` now
+-- appends `tokenize_name(chunk_text)`'s decomposed+stemmed tokens to the
+-- indexed `chunk_text` column, the same way it already does for
+-- `qualified_name`'s bare identifier.
+--
+-- Existing rows only have the old verbatim text — clear them and let the
+-- startup backfill (`fts_backfill_needed`, re-triggered for this migration
+-- too) repopulate with the enriched text.
+DELETE FROM chunk_fts;

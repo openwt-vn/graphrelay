@@ -1,0 +1,296 @@
+{
+ "micro": {
+  "recall": 1.0,
+  "precision": 0.755
+ },
+ "tasks": [
+  {
+   "id": "S01",
+   "target": "NewAccessTokensPanel",
+   "depth": 1,
+   "key": 3,
+   "returned": 3,
+   "tp": 3,
+   "fp": 0,
+   "fn": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "truncated": false,
+   "missed": [],
+   "extra": []
+  },
+  {
+   "id": "S02",
+   "target": "TermsQuery",
+   "depth": 1,
+   "key": 3,
+   "returned": 3,
+   "tp": 3,
+   "fp": 0,
+   "fn": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "truncated": false,
+   "missed": [],
+   "extra": []
+  },
+  {
+   "id": "S03",
+   "target": "InTransaction",
+   "depth": 1,
+   "key": 3,
+   "returned": 5,
+   "tp": 3,
+   "fp": 2,
+   "fn": 0,
+   "recall": 1.0,
+   "precision": 0.6,
+   "truncated": false,
+   "missed": [],
+   "extra": [
+    [
+     "models/db/context_test.go",
+     "TestInTransaction"
+    ],
+    [
+     "models/db/context_test.go",
+     "TestTxContext"
+    ]
+   ]
+  },
+  {
+   "id": "S04",
+   "target": "loadAccountData",
+   "depth": 1,
+   "key": 3,
+   "returned": 3,
+   "tp": 3,
+   "fp": 0,
+   "fn": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "truncated": false,
+   "missed": [],
+   "extra": []
+  },
+  {
+   "id": "S05",
+   "target": "ToProjectColumn",
+   "depth": 1,
+   "key": 3,
+   "returned": 3,
+   "tp": 3,
+   "fp": 0,
+   "fn": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "truncated": false,
+   "missed": [],
+   "extra": []
+  },
+  {
+   "id": "S06",
+   "target": "getRepoWorkingLockKey",
+   "depth": 1,
+   "key": 3,
+   "returned": 3,
+   "tp": 3,
+   "fp": 0,
+   "fn": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "truncated": false,
+   "missed": [],
+   "extra": []
+  },
+  {
+   "id": "S07",
+   "target": "basicAuthorization",
+   "depth": 2,
+   "key": 11,
+   "returned": 25,
+   "tp": 11,
+   "fp": 14,
+   "fn": 0,
+   "recall": 1.0,
+   "precision": 0.44,
+   "truncated": false,
+   "missed": [],
+   "extra": [
+    [
+     "services/migrations/codebase_test.go",
+     "TestCodebaseDownloadRepo"
+    ],
+    [
+     "services/migrations/gitea_downloader_forgejo_test.go",
+     "TestForgejoDownloadRepo"
+    ],
+    [
+     "services/migrations/gitea_downloader_forgejo_test.go",
+     "TestGiteaDownloaderDisabledUnits"
+    ],
+    [
+     "services/migrations/gitea_downloader_forgejo_test.go",
+     "TestGiteaDownloaderServerVersion"
+    ],
+    [
+     "services/migrations/gitea_downloader_test.go",
+     "TestGiteaDownloadCommentsPaging"
+    ],
+    [
+     "services/migrations/gitea_downloader_test.go",
+     "TestGiteaDownloadRepo"
+    ],
+    [
+     "services/migrations/gitea_uploader_test.go",
+     "TestGiteaUploadRepo"
+    ],
+    [
+     "services/migrations/github_graphql_test.go",
+     "TestGraphQLEndpoint"
+    ],
+    [
+     "services/migrations/github_graphql_test.go",
+     "newGithubTestDownloader"
+    ],
+    [
+     "services/migrations/github_test.go",
+     "TestGitHubDownloadRepo"
+    ],
+    [
+     "services/migrations/github_test.go",
+     "TestGitHubIssuesPageBasedLinkFallback"
+    ],
+    [
+     "services/migrations/github_test.go",
+     "TestGithubIssuePagination"
+    ],
+    [
+     "services/migrations/gogs_test.go",
+     "TestGogsDownloadRepo"
+    ],
+    [
+     "services/migrations/onedev_test.go",
+     "TestOneDevDownloadRepo"
+    ]
+   ]
+  },
+  {
+   "id": "S08",
+   "target": "AddPushMirrorToQueue",
+   "depth": 2,
+   "key": 6,
+   "returned": 6,
+   "tp": 6,
+   "fp": 0,
+   "fn": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "truncated": false,
+   "missed": [],
+   "extra": []
+  },
+  {
+   "id": "S09",
+   "target": "NewGroup",
+   "depth": 2,
+   "key": 7,
+   "returned": 7,
+   "tp": 7,
+   "fp": 0,
+   "fn": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "truncated": false,
+   "missed": [],
+   "extra": []
+  },
+  {
+   "id": "S10",
+   "target": "loadDBSetting",
+   "depth": 2,
+   "key": 14,
+   "returned": 16,
+   "tp": 14,
+   "fp": 2,
+   "fn": 0,
+   "recall": 1.0,
+   "precision": 0.875,
+   "truncated": false,
+   "missed": [],
+   "extra": [
+    [
+     "modules/setting/mailer_test.go",
+     "TestLoadSettingsForInstallMailServiceFlags"
+    ],
+    [
+     "tests/integration/migration-test/migration_test.go",
+     "initMigrationTest"
+    ]
+   ]
+  },
+  {
+   "id": "S11",
+   "target": "shouldBlockRunByConcurrency",
+   "depth": 2,
+   "key": 8,
+   "returned": 16,
+   "tp": 8,
+   "fp": 8,
+   "fn": 0,
+   "recall": 1.0,
+   "precision": 0.5,
+   "truncated": false,
+   "missed": [],
+   "extra": [
+    [
+     "services/actions/clear_tasks_test.go",
+     "TestPrepareToStartWithConcurrency_WaitingJobHoldsGroup"
+    ],
+    [
+     "services/actions/clear_tasks_test.go",
+     "TestShouldBlockRunByConcurrency_CancellingJobBlocks"
+    ],
+    [
+     "services/actions/job_emitter_test.go",
+     "Test_checkJobsOfCurrentRunAttempt_NeedApprovalKeepsJobsBlocked"
+    ],
+    [
+     "services/actions/job_emitter_test.go",
+     "Test_checkJobsOfCurrentRunAttempt_RunLevelConcurrencyKeepsJobsBlocked"
+    ],
+    [
+     "services/actions/job_emitter_test.go",
+     "Test_checkJobsOfCurrentRunAttempt_SameGroupSiblingsGateInTurn"
+    ],
+    [
+     "services/actions/job_emitter_test.go",
+     "Test_checkJobsOfCurrentRunAttempt_SkippedCallerIsUpdated"
+    ],
+    [
+     "services/actions/job_emitter_test.go",
+     "Test_findConcurrencyWaiterToWake"
+    ],
+    [
+     "services/actions/max_parallel_test.go",
+     "TestCheckJobs_ApprovedRunWaitsOnNeedsThenMaxParallel"
+    ]
+   ]
+  },
+  {
+   "id": "S12",
+   "target": "prepareCommonAuthPageData",
+   "depth": 2,
+   "key": 16,
+   "returned": 16,
+   "tp": 16,
+   "fp": 0,
+   "fn": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "truncated": false,
+   "missed": [],
+   "extra": []
+  }
+ ]
+}

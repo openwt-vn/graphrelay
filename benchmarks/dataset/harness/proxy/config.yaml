@@ -1,0 +1,21 @@
+# LiteLLM proxy config for the source-of-truth benchmark: fronts GLM 5.3 Flash (via OpenRouter)
+# behind LiteLLM's unified `/v1/messages` route so Claude Code CLI can drive it like the real
+# Anthropic API. model_name is what run.py passes as --model and what providers.yaml's `model:`
+# must match exactly (a slash-free alias: the CLI 404s on org/model slugs).
+#
+# Start with (the ../run-sot.sh script does this for you):
+#   OPENROUTER_API_KEY=... LITELLM_MASTER_KEY=sk-local-benchmark-only \
+#     harness/proxy/.venv/bin/litellm --config harness/proxy/config.yaml --port 4000
+model_list:
+  - model_name: openrouter-glm-5-3-flash
+    litellm_params:
+      model: openrouter/z-ai/glm-5.3-flash
+      api_key: os.environ/OPENROUTER_API_KEY
+
+litellm_settings:
+  drop_params: true
+
+general_settings:
+  # A static bearer token Claude Code sends as ANTHROPIC_AUTH_TOKEN (run.py forwards providers.yaml's
+  # api_key_env value verbatim). Purely local; it only needs to match LITELLM_MASTER_KEY.
+  master_key: os.environ/LITELLM_MASTER_KEY

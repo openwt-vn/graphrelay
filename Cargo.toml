@@ -1,0 +1,186 @@
+[workspace]
+resolver = "2"
+members = [
+    ".",
+    "crates/graphrelay-core",
+    "crates/graphrelay-parser",
+    "crates/graphrelay-store",
+    "crates/graphrelay-watcher",
+    "crates/graphrelay-mcp",
+    "crates/graphrelay-api",
+    "crates/graphrelay-ui",
+    "crates/graphrelay-scip",
+    "crates/graphrelay-decision-engine",
+    "benchmarks",
+]
+default-members = ["."]
+
+[workspace.package]
+version      = "0.1.0"
+edition      = "2021"
+rust-version = "1.78"
+license      = "MIT"
+authors      = ["OpenWTVN"]
+
+[workspace.dependencies]
+# Async runtime
+tokio             = { version = "1", features = ["full"] }
+# HTTP server
+axum              = { version = "0.7", features = ["macros"] }
+tower             = { version = "0.4", features = ["util"] }
+tower-http        = { version = "0.5", features = ["cors", "fs"] }
+# Serialization
+serde             = { version = "1", features = ["derive"] }
+serde_json        = "1"
+# Error handling
+anyhow            = "1"
+thiserror         = "1"
+reqwest = { version = "0.12", features = ["json", "blocking", "rustls-tls"], default-features = false }
+# Binary/PATH detection (for SCIP indexer detection)
+which             = "6"
+# Logging
+tracing           = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+# Tree-sitter
+tree-sitter       = "0.24"
+tree-sitter-rust  = "0.23"
+tree-sitter-typescript = "0.23"
+tree-sitter-javascript = "0.23"
+tree-sitter-python = "0.23"
+tree-sitter-go         = "0.23"
+tree-sitter-java       = "0.23"
+tree-sitter-c          = "0.23"
+tree-sitter-cpp        = "0.23"
+tree-sitter-c-sharp    = "=0.23.0"
+tree-sitter-ruby       = "0.23"
+tree-sitter-php        = "0.23"
+tree-sitter-kotlin-ng  = "1.1"
+# 0.2, not the newer 0.5 — 0.5.0 is generated against a tree-sitter-cli that
+# emits ABI 15, incompatible with our tree-sitter 0.24 runtime
+# (`LanguageError { version: 15 }` at load time); 0.2.0 matches our ABI.
+tree-sitter-lua        = "=0.2.0"
+tree-sitter-swift      = "0.6"
+tree-sitter-scala      = "0.23"
+# Phase A (Plan 19) — graphify language-parity gap. Each version below was
+# checked directly against its own `src/parser.c`'s `LANGUAGE_VERSION` before
+# pinning (the tree-sitter-lua precedent above: don't trust "latest" without
+# checking). Pins get a comment only when the latest published version turned
+# out to be ABI 15 (incompatible with our tree-sitter 0.24 / ABI 14 runtime);
+# unannotated = latest resolved clean at ABI 14.
+# Latest (0.25.x) is ABI 15; 0.23.3 is the newest ABI-14 release.
+tree-sitter-bash        = "=0.23.3"
+tree-sitter-zig         = "1.1"
+tree-sitter-elixir      = "0.3"
+tree-sitter-julia       = "0.23"
+# Latest (0.6.0) is ABI 15; 0.5.1 is the newest ABI-14 release.
+tree-sitter-fortran     = "=0.5.1"
+# Latest (0.26.0) is ABI 15; 0.23.2 is the newest ABI-14 release.
+tree-sitter-ocaml       = "=0.23.2"
+tree-sitter-commonlisp  = "0.4"
+tree-sitter-verilog     = "1.0"
+tree-sitter-pascal      = "0.10"
+# Latest (0.1.0+) is ABI 15; 0.0.4 is the newest ABI-14 release, and still
+# uses the older `language() -> tree_sitter::Language` binding shape (not
+# the newer `LANGUAGE: LanguageFn` const the other Phase A grammars use).
+tree-sitter-dart        = "=0.0.4"
+tree-sitter-objc        = "3.0"
+tree-sitter-groovy      = "0.1"
+# Latest (0.25.x/0.26.x) is ABI 15; 0.24.5 is the newest ABI-14 release, and
+# (like dart above) still uses the older `language()` binding shape.
+tree-sitter-powershell  = "=0.24.5"
+# Phase C (Plan 19) — config/markup formats. Not a "real language" grammar
+# the way Phase A's are, but a real, non-cosmetic gap: ERPNext (this
+# project's own benchmark corpus) has more .json files than .py files.
+tree-sitter-json        = "0.24"
+# SQLite
+# `bundled`'s vendored SQLite amalgamation ships FTS5 compiled in by default
+# (no separate rusqlite/libsqlite3-sys cargo feature exists for it) — powers
+# the lexical (BM25, corpus-IDF-aware) candidate-generation index, the sole
+# retrieval channel since Plan 20 removed vector search. See GraphDb::lexical_search.
+rusqlite          = { version = "0.31", features = ["bundled"] }
+# File watching
+notify            = "6"
+# Config
+toml              = "0.8"
+# Static asset embedding
+rust-embed        = { version = "8", features = ["include-exclude"] }
+# CLI args
+clap              = { version = "4", features = ["derive"] }
+# Utils
+chrono            = { version = "0.4", features = ["serde"] }
+dashmap           = "5"
+crossbeam-channel = "0.5"
+rayon             = "1"
+xxhash-rust       = { version = "0.8", features = ["xxh64"] }
+# Query/identifier stemming for lexical search — a rule-table algorithm
+# (Snowball/Porter), not a trained model: no weights to ship or load.
+rust-stemmers     = "1.2"
+regex             = "1"
+sysinfo           = "0.36"
+walkdir           = "2"
+async-trait       = "0.1"
+tempfile          = "3"
+# Interactive tool picker for `gr setup`
+dialoguer         = { version = "0.11", features = ["fuzzy-select"] }
+
+[package]
+name    = "graphrelay"
+license.workspace = true
+version.workspace = true
+edition.workspace = true
+
+[[bin]]
+name = "gr"
+path = "src/main.rs"
+
+[dependencies]
+graphrelay-core    = { path = "crates/graphrelay-core" }
+graphrelay-parser  = { path = "crates/graphrelay-parser" }
+graphrelay-store   = { path = "crates/graphrelay-store" }
+graphrelay-watcher = { path = "crates/graphrelay-watcher" }
+graphrelay-mcp     = { path = "crates/graphrelay-mcp" }
+graphrelay-api     = { path = "crates/graphrelay-api" }
+graphrelay-ui      = { path = "crates/graphrelay-ui" }
+graphrelay-decision-engine = { path = "crates/graphrelay-decision-engine" }
+
+tokio.workspace              = true
+axum.workspace               = true
+tower-http.workspace         = true
+tracing.workspace            = true
+tracing-subscriber.workspace = true
+clap.workspace               = true
+anyhow.workspace             = true
+toml.workspace               = true
+serde.workspace              = true
+serde_json.workspace         = true
+chrono.workspace             = true
+rusqlite.workspace           = true
+which.workspace              = true
+walkdir.workspace            = true
+tempfile.workspace           = true
+dialoguer.workspace          = true
+
+[dev-dependencies]
+tower.workspace       = true
+serde_json.workspace  = true
+async-trait.workspace = true
+
+[build-dependencies]
+xxhash-rust.workspace = true
+
+[profile.release]
+opt-level     = "z"
+lto           = true
+codegen-units = 1
+strip         = true
+panic         = "abort"
+
+[profile.dev]
+# Full debug info (level 2, the default) produces multi-GB object/binary files
+# across the workspace's several test binaries on a dependency graph this
+# size — line-tables-only is enough for backtraces and cuts that
+# substantially, easing both CI disk pressure and linker memory use.
+debug = "line-tables-only"
+
+[profile.test]
+debug = "line-tables-only"

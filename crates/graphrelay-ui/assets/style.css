@@ -1,0 +1,226 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  display: flex;
+  height: 100vh;
+  font-family: system-ui, -apple-system, sans-serif;
+  background: #1a1a2e;
+  color: #e0e0e0;
+  overflow: hidden;
+}
+
+/* ── Sidebar ─────────────────────────────────────────────────────────────── */
+
+#sidebar {
+  width: 320px;
+  min-width: 280px;
+  display: flex;
+  flex-direction: column;
+  background: #16213e;
+  border-right: 1px solid #2a2a5a;
+  padding: 12px;
+  overflow-y: auto;
+  gap: 12px;
+}
+
+h1 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #4a90d9;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+/* ── Search ──────────────────────────────────────────────────────────────── */
+
+#search-input {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #2a2a5a;
+  background: #0f3460;
+  color: #e0e0e0;
+  font-size: 13px;
+  outline: none;
+}
+
+#search-input:focus {
+  border-color: #4a90d9;
+}
+
+.result-item {
+  background: #0f3460;
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-top: 6px;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.result-item:hover {
+  border-color: #4a90d9;
+}
+
+.result-rank {
+  font-size: 10px;
+  color: #4a90d9;
+  margin-bottom: 2px;
+}
+
+.result-name {
+  font-weight: 600;
+  font-size: 12px;
+  color: #7ecfff;
+  word-break: break-all;
+}
+
+.result-file {
+  font-size: 11px;
+  color: #888;
+  margin: 2px 0;
+}
+
+.result-snippet {
+  font-size: 11px;
+  max-height: 72px;
+  overflow: hidden;
+  font-family: ui-monospace, monospace;
+  color: #aaa;
+  margin-top: 4px;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* ── Inspector ───────────────────────────────────────────────────────────── */
+
+#inspector {
+  background: #0f3460;
+  border-radius: 6px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+#inspector[hidden] { display: none; }
+
+#inspector-name {
+  font-weight: 700;
+  font-size: 13px;
+  color: #7ecfff;
+  word-break: break-all;
+}
+
+#inspector-meta {
+  font-size: 11px;
+  color: #888;
+}
+
+#inspector-snippet {
+  font-size: 11px;
+  font-family: ui-monospace, monospace;
+  max-height: 180px;
+  overflow-y: auto;
+  background: #1a1a2e;
+  padding: 8px;
+  border-radius: 4px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  color: #ccc;
+}
+
+#inspector-callers,
+#inspector-callees {
+  font-size: 11px;
+}
+
+#inspector-callers strong,
+#inspector-callees strong {
+  display: block;
+  color: #888;
+  margin-bottom: 3px;
+}
+
+.sym-link {
+  background: none;
+  border: none;
+  color: #7ecfff;
+  font-size: 11px;
+  cursor: pointer;
+  display: block;
+  padding: 2px 0;
+  text-align: left;
+}
+
+.sym-link:hover { text-decoration: underline; }
+
+/* ── Status bar ──────────────────────────────────────────────────────────── */
+
+#status-bar {
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid #2a2a5a;
+  font-size: 11px;
+  color: #888;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+#status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+  background: #555;
+}
+
+.status-fresh    { background: #2ecc71 !important; }
+.status-indexing { background: #f39c12 !important; }
+.status-stale    { background: #e67e22 !important; }
+.status-error    { background: #e74c3c !important; }
+
+/* ── Graph container ─────────────────────────────────────────────────────── */
+
+#graph-container {
+  flex: 1;
+  position: relative;
+  background: #1a1a2e;
+}
+
+#cy {
+  width: 100%;
+  height: 100%;
+}
+
+#graph-controls {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+#graph-controls button {
+  background: #16213e;
+  border: 1px solid #2a2a5a;
+  color: #e0e0e0;
+  padding: 5px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+#graph-controls button:hover { background: #1a4a80; }
+
+#lang-filter {
+  background: #16213e;
+  border: 1px solid #2a2a5a;
+  color: #e0e0e0;
+  padding: 5px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}

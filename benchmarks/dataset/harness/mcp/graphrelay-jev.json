@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "graphrelay-jev": {
+      "type": "http",
+      "url": "http://localhost:3031/erpnext-jev/mcp"
+    }
+  }
+}

@@ -1,0 +1,31 @@
+name: AI Code Review
+
+# Calls the shared reusable workflow in openwt-vn/ai-code-review.
+#   - pull_request            -> review: post / update findings
+#   - pull_request_review_comment -> reply: judge developer replies
+#   - issue_comment "/review" -> on-demand re-review (members/collaborators)
+# Secrets: MODELSTACK_API_KEY (required). AI_REVIEW_RESOLVE_TOKEN (optional PAT
+# with `repo` scope, lets the bot flip GitHub's "Resolved" flag).
+# Config: ai-review.config.yaml at the repo root.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  pull_request_review_comment:
+    types: [created]
+  issue_comment:
+    types: [created]
+
+jobs:
+  ai-review:
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: openwt-vn/ai-code-review/.github/workflows/ai-review-reusable.yml@v3
+    secrets:
+      MODELSTACK_API_KEY: ${{ secrets.MODELSTACK_API_KEY }}
+      AI_REVIEW_RESOLVE_TOKEN: ${{ secrets.AI_REVIEW_RESOLVE_TOKEN }}
+    # with:
+    #   strict: true               # fail the check on blocking findings
+    #   severity-threshold: high
+    #   runner: '["ubuntu-latest"]' # default is '["self-hosted"]'

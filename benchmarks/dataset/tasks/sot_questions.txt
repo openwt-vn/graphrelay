@@ -1,0 +1,6 @@
+# Source-of-truth benchmark question set: the first question of each capability group
+# (A end-to-end, B caller/callee + impact, C semantic gap, D numeric/logic edge cases,
+# E concurrency/database, F trap/hallucination) of tasks/erpnext_tasks.yaml.
+# Frozen 2026-09-30, chosen by this rule before any tool-arm result existed. Comma-separated
+# ids are read by run-sot.sh; lines starting with # are ignored.
+Q01,Q06,Q11,Q16,Q21,Q26

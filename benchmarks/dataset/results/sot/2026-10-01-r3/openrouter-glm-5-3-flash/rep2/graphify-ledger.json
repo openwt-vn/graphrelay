@@ -1,0 +1,77 @@
+{
+  "arm": "graphify",
+  "provider": "openrouter-glm-5-3-flash",
+  "model": "openrouter-glm-5-3-flash",
+  "base_url": "http://localhost:4000",
+  "pricing": {
+    "in": 0.07125,
+    "out": 0.2375,
+    "cache_read": 0.01425,
+    "cache_write": 0.07125
+  },
+  "max_turns": 30,
+  "runs": [
+    {
+      "task_id": "Q01",
+      "cost_usd": 0.008,
+      "tokens": {
+        "input": 31236,
+        "output": 8861,
+        "cache_read": 257984,
+        "cache_write": 0
+      }
+    },
+    {
+      "task_id": "Q06",
+      "cost_usd": 0.0031,
+      "tokens": {
+        "input": 13848,
+        "output": 3992,
+        "cache_read": 78848,
+        "cache_write": 0
+      }
+    },
+    {
+      "task_id": "Q11",
+      "cost_usd": 0.003,
+      "tokens": {
+        "input": 13999,
+        "output": 3197,
+        "cache_read": 89664,
+        "cache_write": 0
+      }
+    },
+    {
+      "task_id": "Q16",
+      "cost_usd": 0.0011,
+      "tokens": {
+        "input": 4343,
+        "output": 1296,
+        "cache_read": 35712,
+        "cache_write": 0
+      }
+    },
+    {
+      "task_id": "Q21",
+      "cost_usd": 0.0047,
+      "tokens": {
+        "input": 17748,
+        "output": 5935,
+        "cache_read": 142272,
+        "cache_write": 0
+      }
+    },
+    {
+      "task_id": "Q26",
+      "cost_usd": 0.007,
+      "tokens": {
+        "input": 19317,
+        "output": 7170,
+        "cache_read": 275968,
+        "cache_write": 0
+      }
+    }
+  ],
+  "total_cost_usd": 0.0269,
+  "total_tokens": 1011390
+}

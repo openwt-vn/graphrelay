@@ -1,0 +1,219 @@
+{
+ "micro": {
+  "recall": 1.0,
+  "precision": 0.91
+ },
+ "tasks": [
+  {
+   "id": "S01",
+   "target": "_preprocess_ctx",
+   "depth": 1,
+   "key": 3,
+   "returned": 3,
+   "tp": 3,
+   "fp": 0,
+   "fn": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "truncated": false,
+   "missed": [],
+   "extra": []
+  },
+  {
+   "id": "S02",
+   "target": "get_stock_availability",
+   "depth": 1,
+   "key": 3,
+   "returned": 3,
+   "tp": 3,
+   "fp": 0,
+   "fn": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "truncated": false,
+   "missed": [],
+   "extra": []
+  },
+  {
+   "id": "S03",
+   "target": "set_documents_with_active_service_level_agreement",
+   "depth": 1,
+   "key": 4,
+   "returned": 4,
+   "tp": 4,
+   "fp": 0,
+   "fn": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "truncated": false,
+   "missed": [],
+   "extra": []
+  },
+  {
+   "id": "S04",
+   "target": "get_asset_category_account",
+   "depth": 1,
+   "key": 7,
+   "returned": 7,
+   "tp": 7,
+   "fp": 0,
+   "fn": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "truncated": false,
+   "missed": [],
+   "extra": []
+  },
+  {
+   "id": "S05",
+   "target": "get_allowed_companies",
+   "depth": 1,
+   "key": 3,
+   "returned": 3,
+   "tp": 3,
+   "fp": 0,
+   "fn": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "truncated": false,
+   "missed": [],
+   "extra": []
+  },
+  {
+   "id": "S06",
+   "target": "get_root_types",
+   "depth": 1,
+   "key": 3,
+   "returned": 3,
+   "tp": 3,
+   "fp": 0,
+   "fn": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "truncated": false,
+   "missed": [],
+   "extra": []
+  },
+  {
+   "id": "S07",
+   "target": "get_float_amount",
+   "depth": 2,
+   "key": 13,
+   "returned": 16,
+   "tp": 13,
+   "fp": 3,
+   "fn": 0,
+   "recall": 1.0,
+   "precision": 0.812,
+   "truncated": false,
+   "missed": [],
+   "extra": [
+    [
+     "erpnext/accounts/doctype/bank_statement_import_log/test_bank_statement_import_log.py",
+     "_auto_map"
+    ],
+    [
+     "erpnext/accounts/doctype/bank_statement_import_log/test_bank_statement_import_log.py",
+     "test_amount_parser"
+    ],
+    [
+     "erpnext/accounts/doctype/bank_statement_import_log/test_bank_statement_import_log.py",
+     "test_headerless_content_mapping"
+    ]
+   ]
+  },
+  {
+   "id": "S08",
+   "target": "update_reserved_qty_for_sub_contracting",
+   "depth": 2,
+   "key": 6,
+   "returned": 8,
+   "tp": 6,
+   "fp": 2,
+   "fn": 0,
+   "recall": 1.0,
+   "precision": 0.75,
+   "truncated": false,
+   "missed": [],
+   "extra": [
+    [
+     "erpnext/patches/v13_0/add_bin_unique_constraint.py",
+     "delete_and_patch_duplicate_bins"
+    ],
+    [
+     "erpnext/patches/v13_0/add_bin_unique_constraint.py",
+     "execute"
+    ]
+   ]
+  },
+  {
+   "id": "S09",
+   "target": "get_working_hours",
+   "depth": 2,
+   "key": 6,
+   "returned": 6,
+   "tp": 6,
+   "fp": 0,
+   "fn": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "truncated": false,
+   "missed": [],
+   "extra": []
+  },
+  {
+   "id": "S10",
+   "target": "get_count_on",
+   "depth": 2,
+   "key": 10,
+   "returned": 10,
+   "tp": 10,
+   "fp": 0,
+   "fn": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "truncated": false,
+   "missed": [],
+   "extra": []
+  },
+  {
+   "id": "S11",
+   "target": "get_items_to_be_repost",
+   "depth": 2,
+   "key": 8,
+   "returned": 10,
+   "tp": 8,
+   "fp": 2,
+   "fn": 0,
+   "recall": 1.0,
+   "precision": 0.8,
+   "truncated": false,
+   "missed": [],
+   "extra": [
+    [
+     "erpnext/stock/doctype/repost_item_valuation/test_repost_item_valuation.py",
+     "test_create_item_wise_repost_item_valuation_entries"
+    ],
+    [
+     "erpnext/stock/doctype/repost_item_valuation/test_repost_item_valuation.py",
+     "test_remove_attached_file"
+    ]
+   ]
+  },
+  {
+   "id": "S12",
+   "target": "reset_depreciation_schedule",
+   "depth": 2,
+   "key": 5,
+   "returned": 5,
+   "tp": 5,
+   "fp": 0,
+   "fn": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "truncated": false,
+   "missed": [],
+   "extra": []
+  }
+ ]
+}

@@ -1,0 +1,1223 @@
+tasks:
+- id: Q01
+  group: A
+  group_title: End-to-end / cross-module synthesis
+  origin_note: large architecture (Sales Order to GL Entry full cycle, stock-delivered-but-not-billed)
+  question: 'Trace the full lifecycle of a stock item from Sales Order through to final accounting: Sales
+    Order, Delivery Note, and Sales Invoice. Given that a Delivery Note can be submitted well before the
+    corresponding Sales Invoice, how does ERPNext ensure the cost of goods sold is booked exactly once
+    rather than twice? Name the relevant functions, classes and files across all three doctypes.
+
+    '
+  key_facts:
+  - 'Sales Order itself posts no GL entries — it is not an accounting document; SalesOrder.on_submit()
+    (sales_order.py) only handles credit limit, reserved qty, and approving-authority checks.
+
+    '
+  - 'DeliveryNote.on_submit() (erpnext/stock/doctype/delivery_note/delivery_note.py) calls update_stock_ledger()
+    (creating Stock Ledger Entries that reduce warehouse qty) and then make_gl_entries(), inherited from
+    controllers/stock_controller.py, which books inventory (credit) against a provisional expense/COGS
+    account for the delivered items.
+
+    '
+  - 'SalesInvoice.on_submit() (erpnext/accounts/doctype/sales_invoice/sales_invoice.py) calls update_billing_status_in_dn()
+    and then make_gl_entries(), which goes through erpnext/accounts/doctype/sales_invoice/services/gl_composer.py
+    (SalesInvoiceGLComposer).
+
+    '
+  - 'The reconciliation step that prevents double-booking COGS is the composer''s stock-delivered-but-not-billed
+    handling: for each invoice line referencing a delivery_note/dn_detail, it looks up the DN''s Stock
+    Ledger Entry value and the DN item''s expense_account, and if that account is the provisional/SDBNB
+    account, it reverses the provisional DN-side booking and re-books it as real COGS tied to the invoice.
+
+    '
+  - 'This means COGS is recognized exactly once even though the Delivery Note and Sales Invoice can be
+    submitted at very different times — the invoice-side logic actively reverses what the delivery-note-side
+    logic already posted, rather than both sides posting independently.
+
+    '
+  - 'If update_stock is set on the Sales Invoice itself (bypassing a separate Delivery Note), the invoice
+    does its own update_stock_ledger() and stock-movement GL entries directly instead of going through
+    the DN-reversal path.
+
+    '
+  anchor_files:
+  - erpnext/selling/doctype/sales_order/sales_order.py
+  - erpnext/stock/doctype/delivery_note/delivery_note.py
+  - erpnext/controllers/stock_controller.py
+  - erpnext/accounts/doctype/sales_invoice/sales_invoice.py
+  - erpnext/accounts/doctype/sales_invoice/services/gl_composer.py
+- id: Q02
+  group: A
+  group_title: End-to-end / cross-module synthesis
+  origin_note: 'large architecture (subcontracting flow: raw material transfer through job work to receipt)'
+  question: 'Trace how raw materials move from a company''s own warehouse to a supplier for subcontracted
+    job work, get tracked against a Subcontracting Order, and are reconciled with cost roll-up when the
+    finished goods are received via Subcontracting Receipt. Name the relevant functions, classes and files
+    across the whole flow.
+
+    '
+  key_facts:
+  - 'Subcontracting Order (erpnext/subcontracting/doctype/subcontracting_order/subcontracting_order.py)
+    is created from a Purchase Order, with raw-material-supplied items populated via populate_items_table();
+    reserve_raw_materials() optionally creates Stock Reservation Entries for the materials to be supplied.
+
+    '
+  - 'A Stock Entry with purpose "Send to Subcontractor" transfers raw materials from the company warehouse
+    to the supplier''s notional warehouse, linked back to the Subcontracting Order via the entry''s subcontracting_order
+    field, updating the order''s status on submit.
+
+    '
+  - 'Subcontracting Receipt (erpnext/subcontracting/doctype/subcontracting_receipt/subcontracting_receipt.py)
+    is created against the Subcontracting Order once the supplier returns finished goods; its validate()
+    calls set_available_qty_for_consumption(), calculate_items_qty_and_amount(), and validate_bom_required_qty().
+
+    '
+  - 'The reconciliation of how much of each supplied raw material was actually consumed (vs. still with
+    the supplier) lives in the shared erpnext/controllers/subcontracting_controller.py, via __get_transferred_items(),
+    __get_consumed_items(), and __update_consumed_materials().
+
+    '
+  - 'set_rate_for_supplied_items() in the same controller computes the raw-material cost to roll into
+    the finished good''s incoming valuation rate, based on the BOM (set_items_bom()).
+
+    '
+  - 'On submit, GL entries for the Subcontracting Receipt book raw materials consumption, service/labor
+    charges, and the received finished-goods stock value (= consumed RM value + service cost), via a dedicated
+    gl_composer in the subcontracting_receipt services module.
+
+    '
+  - 'Cancelling the Subcontracting Receipt reverses the flow via reset_raw_materials() and reset_supplied_items(),
+    restoring the Subcontracting Order''s supplied/consumed quantities.
+
+    '
+  anchor_files:
+  - erpnext/subcontracting/doctype/subcontracting_order/subcontracting_order.py
+  - erpnext/stock/doctype/stock_entry/stock_entry.py
+  - erpnext/subcontracting/doctype/subcontracting_receipt/subcontracting_receipt.py
+  - erpnext/controllers/subcontracting_controller.py
+- id: Q03
+  group: A
+  group_title: End-to-end / cross-module synthesis
+  origin_note: large architecture (Landed Cost Voucher allocation and retroactive repost)
+  question: 'How does a Landed Cost Voucher redistribute freight/customs charges across multiple Purchase
+    Receipt line items, and how does it retroactively update the valuation rate and GL postings of Purchase
+    Receipts that were already submitted before the Landed Cost Voucher existed? Name the relevant functions
+    and files.
+
+    '
+  key_facts:
+  - 'Landed Cost Voucher (erpnext/stock/doctype/landed_cost_voucher/landed_cost_voucher.py) is created
+    against one or more already-submitted Purchase Receipts/Purchase Invoices/Subcontracting Receipts,
+    fetched via get_items_from_purchase_receipts().
+
+    '
+  - 'set_applicable_charges_on_item() distributes total_taxes_and_charges proportionally across item rows
+    based on a configurable distribute_charges_based_on setting (e.g. Qty, Amount, or Distribute Manually),
+    dumping any rounding remainder onto the last item row.
+
+    '
+  - 'validate_applicable_charges_for_item() enforces that the sum of per-item applicable_charges reconciles
+    exactly to total_taxes_and_charges within a precision-based tolerance, else throws.
+
+    '
+  - 'On submit, update_landed_cost() is the retroactive-repost mechanism: for each linked receipt it stamps
+    landed_cost_voucher_amount onto the PR items and recomputes the item''s landed valuation rate.
+
+    '
+  - 'It then performs what is effectively a simulated cancel-then-resubmit on the linked document — reversing
+    the existing stock ledger and GL entries and regenerating them with the new landed cost — without
+    actually changing the document''s persisted submitted status, purely to make the Stock Ledger Entries
+    and GL Entries reflect the updated valuation.
+
+    '
+  - 'validate_asset_qty_and_status() additionally guards that, for fixed-asset items, the correct number
+    of Asset records already exist in an appropriate status before landed cost can be allocated onto them.
+
+    '
+  - 'Cancelling the Landed Cost Voucher re-runs update_landed_cost(), effectively reverting the linked
+    receipts back to their pre-LCV valuation.
+
+    '
+  anchor_files:
+  - erpnext/stock/doctype/landed_cost_voucher/landed_cost_voucher.py
+  - erpnext/controllers/stock_controller.py
+- id: Q04
+  group: A
+  group_title: End-to-end / cross-module synthesis
+  origin_note: 'v2 large-arch / PR-derived (source_pr #56858 — POST-only enforcement on state-changing
+    whitelisted endpoints)'
+  question: 'Many of ERPNext''s whitelisted endpoints modify data (creating, saving or submitting documents).
+    How does the codebase restrict such state-changing whitelisted endpoints from being invoked via HTTP
+    GET? Explain the mechanism used and name several concrete endpoints (with their files) that carry
+    this restriction.
+
+    '
+  key_facts:
+  - 'The restriction is expressed as an argument to the whitelist decorator itself: @frappe.whitelist(methods=["POST"])
+    — not a separate decorator or middleware.
+
+    '
+  - 'set_closing_balance_as_per_statement in erpnext/accounts/doctype/bank_account/bank_account.py is
+    decorated @frappe.whitelist(methods=["POST"]) and cannot be called via GET.
+
+    '
+  - 'make_payment_request in erpnext/accounts/doctype/payment_request/payment_request.py is POST-only.
+
+    '
+  - 'make_quality_inspections in erpnext/controllers/stock_controller.py is POST-only.
+
+    '
+  - 'set_work_order_ops in erpnext/manufacturing/doctype/work_order/work_order.py is POST-only.
+
+    '
+  - 'The restriction specifically targets endpoints whose bodies create or modify documents (get_doc followed
+    by insert/save/submit), applied as a sweep across a dozen-plus modules (accounts, assets, buying,
+    controllers, crm, integrations, manufacturing, projects, selling, stock and more).
+
+    '
+  anchor_files:
+  - erpnext/accounts/doctype/bank_account/bank_account.py
+  - erpnext/accounts/doctype/payment_request/payment_request.py
+  - erpnext/controllers/stock_controller.py
+  - erpnext/manufacturing/doctype/work_order/work_order.py
+- id: Q05
+  group: A
+  group_title: End-to-end / cross-module synthesis
+  origin_note: 'v2 flow / PR-derived (source_pr #56264/#56206 — partial raw-material pick/transfer from
+    work order)'
+  question: 'When raw materials for a Work Order are transferred in several partial batches (e.g. via
+    pick lists that could only be partially fulfilled), how does ERPNext compute the work order''s "material
+    transferred for manufacturing" progress, and what prevents transferring more material than the work
+    order requires? Name the relevant functions and files.
+
+    '
+  key_facts:
+  - 'recompute_material_transferred_for_manufacturing in erpnext/manufacturing/doctype/work_order/services/required_items.py
+    recomputes material_transferred_for_manufacturing from actual item-level transferred quantities rather
+    than from a stock entry''s fg_completed_qty.
+
+    '
+  - 'For the pick-list flow (stock entries with fg_completed_qty == 0) it computes the minimum fraction
+    of transferred_qty / required_qty across required items (the bottleneck item), clamps it at 1.0, and
+    sets material_transferred_for_manufacturing to that fraction times the work order qty.
+
+    '
+  - 'When stock entries carry fg_completed_qty > 0, the older behavior is preserved: progress comes from
+    summing fg_completed_qty over submitted "Material Transfer for Manufacture" entries.
+
+    '
+  - 'Only required-items rows with include_item_in_manufacturing set and required_qty > 0 participate
+    in the fraction computation.
+
+    '
+  - 'The upper bound is enforced by _validate_no_excess_transfer in erpnext/stock/doctype/stock_entry/services/material_transfer.py,
+    which computes pending = required_qty - transferred_qty per item and throws an "Excess Material Transfer"
+    error when a transfer exceeds it.
+
+    '
+  - 'That excess-transfer check is skipped for return entries and when Manufacturing Settings'' backflush_raw_materials_based_on
+    is "Material Transferred for Manufacture".
+
+    '
+  - 'Source rows are matched to required items by item_code with a fallback to original_item (substituted
+    components), counting only rows that have a source warehouse.
+
+    '
+  anchor_files:
+  - erpnext/manufacturing/doctype/work_order/services/required_items.py
+  - erpnext/stock/doctype/stock_entry/services/material_transfer.py
+- id: Q06
+  group: B
+  group_title: Caller/callee trace + impact analysis
+  origin_note: impact analysis (general ledger posting)
+  question: 'Suppose you need to change the signature and the merge behavior of make_gl_entries in erpnext/accounts/general_ledger.py.
+    What does this function do today (validations, merging/deduplication, round-off handling), and what
+    would be affected by the change — enumerate the main document types and modules that call it.
+
+    '
+  key_facts:
+  - 'make_gl_entries (erpnext/accounts/general_ledger.py) is the single entry point for posting a GL map:
+    it runs process_gl_map and then save_entries; on cancel it delegates to make_reverse_gl_entries.
+
+    '
+  - 'merge_similar_entries deduplicates GL rows by a merge key built from account, cost center, party,
+    against_voucher and related fields, summing debit/credit of rows with equal keys.
+
+    '
+  - 'process_debit_credit_difference enforces that total debit equals total credit within an allowance,
+    and books a balancing round-off GL entry via make_round_off_gle using the company round-off account.
+
+    '
+  - 'Frozen-period protection: check_freezing_date blocks postings on or before the accounts-frozen date
+    unless the user holds the role allowed for frozen entries; validate_against_pcv blocks entries before
+    the last Period Closing Voucher.
+
+    '
+  - 'Direct invoice/payment callers include Sales Invoice, Purchase Invoice, Payment Entry and Journal
+    Entry (each doctype''s make_gl_entries call site).
+
+    '
+  - 'Stock-side callers go through erpnext/controllers/stock_controller.py, which covers Delivery Note,
+    Purchase Receipt, Stock Entry, Stock Reconciliation and other stock documents.
+
+    '
+  - 'Other affected modules include Period Closing Voucher, deferred revenue processing, asset doctypes
+    (Asset, Asset Capitalization, Asset Repair), and accounting repost utilities (repost_accounting_ledger
+    / repost_gle_for_stock_vouchers).
+
+    '
+  - 'Sales Invoice calls make_gl_entries with merge_entries=False, so a change to default merge behavior
+    affects Journal/Payment entries differently from Sales Invoice.
+
+    '
+  anchor_files:
+  - erpnext/accounts/general_ledger.py
+  - erpnext/accounts/services/gl_validator.py
+  - erpnext/controllers/stock_controller.py
+- id: Q07
+  group: B
+  group_title: Caller/callee trace + impact analysis
+  origin_note: 'PR-derived (source_pr #56898 — Trends report group-by empty-row guard)'
+  question: 'In ERPNext''s shared "Trends" report engine (used by Sales Order Trends, Purchase Order Trends,
+    Quotation Trends, Sales/Purchase Invoice Trends, and others), what happens when a "Group By" filter
+    is combined with a "Based On" filter and the detail query for one of the distinct group values finds
+    no matching data for that particular based-on row — does the report break?
+
+    '
+  key_facts:
+  - 'The shared logic is get_data(filters, conditions) in erpnext/controllers/trends.py, imported by all
+    "Trends" report modules across selling/buying/accounts.
+
+    '
+  - 'When group_by is set, the function first gets one row per based-on key, then for each runs a second
+    query to get distinct values of the group-by column restricted to that based-on key.
+
+    '
+  - 'For each distinct group-by value it runs a third detail query filtered by both the group-by value
+    and the based-on key.
+
+    '
+  - 'The guard is "if not row1: continue" — if that detail query returns zero rows for a particular combination,
+    the loop iteration is skipped entirely rather than proceeding.
+
+    '
+  - 'Without that guard, subsequent code indexing into the empty row1 list would raise an IndexError and
+    crash the whole report.
+
+    '
+  - 'After the group-by branch completes, a totals row is appended that sums only Float and Currency-typed
+    columns, treating None as 0.
+
+    '
+  anchor_files:
+  - erpnext/controllers/trends.py
+- id: Q08
+  group: B
+  group_title: Caller/callee trace + impact analysis
+  origin_note: 'PR-derived (source_pr #56895 — budget requested/ordered amount computed per row)'
+  question: 'When ERPNext checks a Material Request or Purchase Order against a Budget, how does the system
+    compute the "requested amount" across multiple matching line items, and why does the placement of
+    rate relative to the aggregate Sum() function matter for correctness?
+
+    '
+  key_facts:
+  - 'get_requested_amount in erpnext/accounts/doctype/budget/budget.py computes amount as Sum((stock_qty
+    - ordered_qty) * rate) over Material Request Item, i.e. rate is multiplied per-row inside the Sum
+    aggregate, not applied after summing quantities.
+
+    '
+  - 'Computing rate inside the aggregate ensures each row''s rate is multiplied by that same row''s outstanding
+    quantity before summation, so the requested amount is computed per matching line then totaled, rather
+    than summing quantities first and multiplying by an arbitrary single rate afterward.
+
+    '
+  - 'The query filters to rows where stock_qty > ordered_qty and applies shared conditions (item code,
+    budget_against field, fiscal-year date range), so only outstanding quantities on in-scope rows contribute.
+
+    '
+  - 'get_ordered_amount follows the same per-row pattern for Purchase Order Items, using each row''s own
+    stored amount/billed_amt values.
+
+    '
+  - 'A shared helper builds the common WHERE conditions used by both functions: matching expense_account,
+    optionally the budget_against_field, and a date-range filter bounded by the budget''s fiscal year.
+
+    '
+  - 'compare_expense_with_budget calls both functions to compute requested_amount and ordered_amount,
+    then sums actual_expense + amount against budget_amount to decide whether to throw (Stop) or warn
+    (msgprint) per the budget''s configured action.
+
+    '
+  anchor_files:
+  - erpnext/accounts/doctype/budget/budget.py
+- id: Q09
+  group: B
+  group_title: Caller/callee trace + impact analysis
+  origin_note: 'PR-derived (source_pr #56882 — reset_mode_of_payments AttributeError on POS Invoice)'
+  question: 'When a cashier reopens a saved draft POS Invoice and its payment methods need to be refreshed
+    from the POS Profile, how does reset_mode_of_payments repopulate the payments table, and how does
+    the underlying helper avoid breaking when called on a doctype that lacks some Sales-Invoice-only fields?
+
+    '
+  key_facts:
+  - 'POSInvoice.reset_mode_of_payments is a whitelisted method that, if pos_profile is set, fetches the
+    cached POS Profile doc and calls update_multi_mode_option, then resets paid_amount to 0.
+
+    '
+  - 'update_multi_mode_option is defined once, shared, and used by both Sales Invoice and POS Invoice.
+
+    '
+  - 'Inside it, a line reads doc.get("is_created_using_pos") rather than direct attribute access doc.is_created_using_pos.
+
+    '
+  - 'This matters because is_created_using_pos is a field defined on Sales Invoice but NOT on POS Invoice
+    — a Frappe Document only auto-generates attributes for its own declared fields, so direct dotted access
+    would raise AttributeError on a POS Invoice.
+
+    '
+  - 'Using .get() instead safely evaluates to None/falsy on POS Invoice instead of raising, which gates
+    a non-blocking toast notification about payment methods being refreshed.
+
+    '
+  - 'A dedicated regression test creates a draft POS Invoice, calls reset_mode_of_payments, and asserts
+    it does not raise and that the payments table gets repopulated.
+
+    '
+  anchor_files:
+  - erpnext/accounts/doctype/pos_invoice/pos_invoice.py
+  - erpnext/accounts/doctype/sales_invoice/services/pos.py
+- id: Q10
+  group: B
+  group_title: Caller/callee trace + impact analysis
+  origin_note: 'v2 impact / PR-derived (source_pr #56315 — item rate calculation rewrite)'
+  question: 'How does ERPNext compute a transaction item''s final rate from its price list rate, margin,
+    discount and applied pricing rules — and what happens when the user manually overrides the rate? Trace
+    the current per-item rate calculation in the shared taxes-and-totals controller, naming the functions
+    involved.
+
+    '
+  key_facts:
+  - 'The per-item rate is computed by calculate_item_rate(item) in erpnext/controllers/taxes_and_totals.py;
+    calculate_item_values iterates the document items and calls it before setting net_rate/amount/net_amount.
+
+    '
+  - 'calculate_item_rate early-returns when item.price_list_rate is falsy, first clearing margin and discount
+    via remove_margin / remove_discount helpers and zeroing rate_with_margin.
+
+    '
+  - 'When pricing rules apply (item.pricing_rules set and the document does not ignore pricing rules),
+    margin fields are re-derived from the applicable Pricing Rules (via get_applied_pricing_rules) before
+    the rate math runs.
+
+    '
+  - 'The computed candidate rate is rate_with_margin (from get_rate_with_margin) minus the discount amount
+    derived from discount_percentage, rounded to the rate precision.
+
+    '
+  - 'Precedence: if pricing rules apply or item.rate is unset, the computed rate wins; if the user-entered
+    item.rate differs from the computed rate, the user''s rate is preferred and margin/discount are reset
+    to reconcile with it.
+
+    '
+  - 'When the preferred user rate exceeds price_list_rate, the gap is stored as an "Amount"-type margin
+    and the discount is cleared; when it is below, the gap becomes discount_amount (with discount_percentage
+    zeroed) and the margin is cleared.
+
+    '
+  - 'get_rate_with_margin returns price_list_rate unchanged when no margin is set and applies a (1 + rate/100)
+    multiplier for "Percentage" margins.
+
+    '
+  anchor_files:
+  - erpnext/controllers/taxes_and_totals.py
+- id: Q11
+  group: C
+  group_title: Semantic gap (no keyword overlap with the code)
+  origin_note: 'PR-derived (source_pr #56883 — Dunning outstanding amount currency for foreign-currency
+    invoices)'
+  question: 'When a Dunning is created from an overdue Sales Invoice, how is the outstanding amount on
+    each Overdue Payment row computed, and how does this behave correctly when the invoice is in a foreign
+    currency but posts against a receivable account in a different currency?
+
+    '
+  key_facts:
+  - 'The Dunning''s child table row population happens inside create_dunning in erpnext/accounts/doctype/sales_invoice/mapper.py,
+    specifically in a nested postprocess_dunning function.
+
+    '
+  - 'When the source invoice has exactly one payment schedule row, the code special-cases the outstanding
+    amount: if party_account_currency differs from currency (foreign-currency invoice), the row''s outstanding
+    is set from the invoice''s payment_schedule[0].outstanding rather than the invoice''s own outstanding_amount
+    field.
+
+    '
+  - 'This distinction matters because outstanding_amount on Sales Invoice is denominated in party_account_currency,
+    while Payment Schedule''s and Overdue Payment''s outstanding fields are both denominated in the transaction
+    currency — so outstanding_amount is not reliably in the invoice''s transaction currency when the two
+    currencies differ.
+
+    '
+  - 'When party_account_currency equals currency (no mismatch), the code falls back to using the invoice''s
+    own outstanding_amount field directly.
+
+    '
+  - 'A dedicated regression test creates a USD Sales Invoice against an INR receivable account and asserts
+    the invoice''s outstanding_amount is in INR but payment_schedule[0].outstanding and the resulting
+    Dunning''s overdue_payments outstanding are both in USD.
+
+    '
+  - 'This special-case branch only applies when the invoice has exactly one payment schedule row; for
+    invoices with multiple schedule rows, the general mapping (filtering to schedule rows with outstanding
+    > 0) is used instead.
+
+    '
+  anchor_files:
+  - erpnext/accounts/doctype/sales_invoice/mapper.py
+  - erpnext/accounts/doctype/dunning/dunning.py
+- id: Q12
+  group: C
+  group_title: Semantic gap (no keyword overlap with the code)
+  origin_note: 'PR-derived (source_pr #56870 — permission checks on Item form auxiliary endpoints)'
+  question: 'The Item form loads several pieces of auxiliary data (attribute autocomplete, item price
+    previews, opening stock creation) via whitelisted server calls. How does each of these guard against
+    being called by a user who lacks the appropriate read/write permission?
+
+    '
+  key_facts:
+  - 'get_item_attribute in erpnext/stock/doctype/item/item.py, used for autocomplete in a child table,
+    explicitly checks frappe.has_permission("Item") and throws "No Permission" if false before querying
+    Item Attribute Value records.
+
+    '
+  - 'get_item_prices checks read permission on the Item Price doctype specifically (not Item), since it
+    reads Item Price records rather than the Item itself, throwing "Not permitted" as a PermissionError.
+
+    '
+  - 'make_opening_stock_entry checks write permission on Item for the specific item_code before creating
+    an opening Stock Entry for that item.
+
+    '
+  - 'On the client side, item.js pre-emptively checks whether the user can read Item Price and hides the
+    prices section entirely if not, rather than surfacing a server-side PermissionError.
+
+    '
+  - 'The server-side permission check in get_item_prices still acts as defense-in-depth against direct/bypassed
+    calls to the whitelisted endpoint, independent of the client-side visibility check.
+
+    '
+  - 'Other whitelisted helpers in the same file with no data-sensitivity concerns (like UOM conversion
+    factor lookup) intentionally omit explicit permission checks since they only expose non-confidential
+    metadata.
+
+    '
+  anchor_files:
+  - erpnext/stock/doctype/item/item.py
+- id: Q13
+  group: C
+  group_title: Semantic gap (no keyword overlap with the code)
+  origin_note: v2 semantic gap (stock promised to a customer — reservation)
+  question: 'In ERPNext, some stock sitting in a warehouse may already be promised to a specific customer.
+    How does the system know that promised goods cannot be used for someone else — where is the promise
+    recorded, how is "still available to promise" calculated, and how does it stop an unrelated shipment
+    from taking that stock? Name the relevant functions and files.
+
+    '
+  key_facts:
+  - 'Reservations are recorded as separate Stock Reservation Entry documents (erpnext/stock/doctype/stock_reservation_entry/)
+    holding reserved_qty, delivered_qty and available_qty, linked to a voucher (typically a Sales Order).
+
+    '
+  - 'get_available_qty_to_reserve computes availability as the stock balance minus outstanding reservations
+    — summing (reserved_qty - delivered_qty - transferred_qty - consumed_qty) over submitted Stock Reservation
+    Entries.
+
+    '
+  - 'The reserved total is mirrored onto the warehouse Bin via update_reserved_stock_in_bin, called on
+    submit/cancel of a reservation entry.
+
+    '
+  - 'The negative-stock guard in erpnext/stock/stock_ledger.py (validate_negative_stock) subtracts reserved
+    stock from the post-transaction quantity, so an unrelated outward movement is blocked even when the
+    raw quantity looks sufficient.
+
+    '
+  - 'Reservation creation is concurrency-safe: availability is computed under row locks (for_update, with
+    Bin locking on Postgres) so two simultaneous reservations cannot both claim the same stock.
+
+    '
+  - 'Delivery Notes reconcile against reservations via validate_against_stock_reservation_entries in erpnext/stock/doctype/delivery_note/delivery_note.py,
+    linking the shipment back to the promised quantities.
+
+    '
+  anchor_files:
+  - erpnext/stock/doctype/stock_reservation_entry/stock_reservation_entry.py
+  - erpnext/stock/stock_ledger.py
+  - erpnext/stock/doctype/delivery_note/delivery_note.py
+- id: Q14
+  group: C
+  group_title: Semantic gap (no keyword overlap with the code)
+  origin_note: v2 semantic gap (tax-inclusive prices — working backwards to pre-tax)
+  question: 'When item prices in ERPNext already include tax, how does the system work backwards to determine
+    the pre-tax amount of each line? Explain where this happens and how it handles multiple inclusive
+    taxes, compounding tax rows, per-quantity taxes and deduction-type taxes.
+
+    '
+  key_facts:
+  - 'The back-calculation is determine_exclusive_rate in erpnext/controllers/taxes_and_totals.py, and
+    it is skipped entirely unless at least one tax row has included_in_print_rate set.
+
+    '
+  - 'It accumulates a cumulated_tax_fraction across the inclusive tax rows per item and recovers the net
+    amount by dividing the gross line amount by (1 + cumulated_tax_fraction).
+
+    '
+  - 'Flat per-quantity taxes ("On Item Quantity") are handled as an absolute subtraction from the line
+    amount before the division, not as part of the fraction.
+
+    '
+  - 'get_current_tax_fraction computes each row''s fraction by charge_type: "On Net Total" contributes
+    tax_rate/100, while "On Previous Row Amount"/"On Previous Row Total" compound on the referenced row''s
+    fraction.
+
+    '
+  - 'Deduct-type tax rows flip the sign of their fraction (add_deduct_tax == "Deduct" multiplies the fraction
+    by -1).
+
+    '
+  - 'The back-calculation is bypassed while a document-level discount is being applied (discount_amount_applied),
+    and per-item tax rate overrides come from the item tax map via _get_tax_rate.
+
+    '
+  anchor_files:
+  - erpnext/controllers/taxes_and_totals.py
+- id: Q15
+  group: C
+  group_title: Semantic gap (no keyword overlap with the code)
+  origin_note: v2 semantic gap (value parked between goods receipt and supplier bill)
+  question: 'Between receiving goods and receiving the supplier''s bill, where does ERPNext "park" the
+    value of the received goods in the books, and how does entering the bill later move that value out
+    of the holding spot? Trace both the receipt side and the billing side, naming the relevant functions
+    and files.
+
+    '
+  key_facts:
+  - 'At goods receipt, the Purchase Receipt credits the "Stock Received But Not Billed" clearing account
+    while debiting inventory — make_stock_received_but_not_billed_entry in erpnext/stock/doctype/purchase_receipt/services/gl_composer.py.
+
+    '
+  - 'The clearing account comes from the company default stock_received_but_not_billed.
+
+    '
+  - 'When the supplier bill (Purchase Invoice without update_stock) is entered, set_expense_account in
+    erpnext/accounts/doctype/purchase_invoice/services/expense_account.py rewrites the line''s expense
+    head to that same clearing account, so booking the bill debits (clears) it against the supplier.
+
+    '
+  - 'The clearing debit is booked at the full billed amount and deliberately does not re-book purchase
+    price variance — re-booking it would double-count the variance and leave the clearing account partially
+    uncleared.
+
+    '
+  - 'The mechanism works in either order: if the invoice is entered before any receipt exists, the expense
+    is still parked in the same clearing account.
+
+    '
+  - 'Tax/valuation portions booked on the receipt are reversed on the invoice via a separate clearing-account
+    debit guarded by checking the receipt''s GL entries for the negative expense booked there.
+
+    '
+  anchor_files:
+  - erpnext/stock/doctype/purchase_receipt/services/gl_composer.py
+  - erpnext/accounts/doctype/purchase_invoice/services/expense_account.py
+  - erpnext/accounts/doctype/purchase_invoice/services/gl_composer.py
+- id: Q16
+  group: D
+  group_title: Numeric/logic edge cases
+  origin_note: 'PR-derived (source_pr #56926 — pricing rule template/variant conflict)'
+  question: 'If a Pricing Rule''s "Apply On" is set to "Item Code" and a user adds both an item template
+    (a templated/variant-attribute item) and one of that template''s own variants to the same rule''s
+    item list, what validation (if any) runs at save time, and what specifically does it check to detect
+    and reject the conflicting configuration?
+
+    '
+  key_facts:
+  - 'PricingRule.validate_template_with_variant in erpnext/accounts/doctype/pricing_rule/pricing_rule.py
+    queries Items whose name is in the rule''s item-code list AND whose variant_of field also points to
+    another item in that same list.
+
+    '
+  - 'This check only runs when apply_on == "Item Code", from within the same validation path as validate_duplicate_apply_on.
+
+    '
+  - 'If a variant/template pair is found, it throws that the variant and its template cannot both be added
+    to the same Pricing Rule, naming both via frappe.bold.
+
+    '
+  - 'The check relies on the Item doctype''s variant_of field, which links a variant item back to its
+    template item.
+
+    '
+  - 'The rationale is that a template already applies its discount to all variants implicitly, so having
+    both configured previously caused the rule to match twice at transaction time, producing a spurious
+    "Multiple Price Rules exist" error — the save-time check blocks this proactively.
+
+    '
+  - 'test_pricing_rule.py has a corresponding test that creates a variant item, appends both template
+    and variant to a new Pricing Rule''s items table, and asserts a ValidationError is raised on insert.
+
+    '
+  anchor_files:
+  - erpnext/accounts/doctype/pricing_rule/pricing_rule.py
+- id: Q17
+  group: D
+  group_title: Numeric/logic edge cases
+  origin_note: 'PR-derived (source_pr #56616, substitute for weak #56906 — same-timestamp SLE tie-breaking)'
+  question: 'When two stock transactions share the exact same posting date and time (e.g. a Purchase Receipt
+    and a Material Transfer both posted at the same second), how does ERPNext''s stock ledger reposting
+    logic determine the correct ordering/selection of "current" vs "previous" Stock Ledger Entries when
+    one of those transactions is later cancelled, so that negative-stock validation isn''t fooled by ambiguous
+    same-timestamp ordering?
+
+    '
+  key_facts:
+  - 'make_sl_entries in erpnext/stock/stock_ledger.py reads a cancelled flag from the SLE''s is_cancelled
+    and passes it through to repost_current_voucher(..., cancelled=cancelled).
+
+    '
+  - 'repost_current_voucher builds the args dict passed into update_entries_after, explicitly including
+    "cancelled": cancelled alongside sle_id and creation.
+
+    '
+  - 'get_sle_against_current_voucher queries SLEs matching the same item_code/warehouse/posting_datetime,
+    and only additionally filters by an exact creation timestamp when the current operation is NOT a cancellation
+    (cancelled flag false), since a cancellation''s own creation timestamp does not match the original
+    entry''s.
+
+    '
+  - 'get_previous_sle_of_current_voucher similarly skips its creation-based tie-break clause when cancelled
+    is true, falling back to pure posting_datetime ordering rather than an incorrect creation-based constraint.
+
+    '
+  - 'This cancelled flag is threaded through the update_entries_after class, which calls both of the above
+    lookup functions when initializing prev_sle_dict and fetching SLEs to reposition/repost.
+
+    '
+  - 'Without correctly signaling cancelled into these lookups, a same-timestamp cancellation could be
+    matched against the wrong sibling SLE, which previously allowed cancelling a voucher to succeed even
+    though a same-timestamp sibling voucher had already consumed that stock.
+
+    '
+  anchor_files:
+  - erpnext/stock/stock_ledger.py
+- id: Q18
+  group: D
+  group_title: Numeric/logic edge cases
+  origin_note: 'PR-derived (source_pr #56812 — valuation rate for internal-transfer purchase receipts)'
+  question: 'When a Purchase Receipt is created for an internal (intra-company) stock transfer, how does
+    the system determine the item''s incoming rate, and does it use a value that was fixed at the time
+    the source Delivery Note was made or one computed fresh at receipt time?
+
+    '
+  key_facts:
+  - 'AccountsController.set_incoming_rate runs during validate() for Purchase Receipt (always) or Purchase
+    Invoice (only if update_stock is set), and only proceeds when the document is an internal transfer.
+
+    '
+  - 'It delegates to set_sales_incoming_rate_for_internal_transfer, which sets a sales_incoming_rate per
+    item row and — unless "arm''s length price" is allowed — overwrites the row''s rate with that value.
+
+    '
+  - 'For a row linked to a source Delivery Note Item, the rate is read from that DN Item''s incoming_rate
+    field (the DN''s own stock valuation cost), not its sales rate — this is deliberately not the possibly
+    marked-up sales price.
+
+    '
+  - 'For a row not linked to a specific DN item, the rate is instead computed live via get_incoming_rate,
+    called with the source warehouse and the Purchase Receipt''s own posting date/time — a fresh valuation
+    lookup at receipt time, not a cached figure from when the Delivery Note was created.
+
+    '
+  - 'get_incoming_rate resolves the rate based on the item''s valuation method (moving average, FIFO,
+    LIFO, or serial/batch-specific valuation) by walking Stock Ledger Entries for that warehouse.
+
+    '
+  - 'Because set_incoming_rate runs inside validate(), it re-executes on every save, so the live source-warehouse
+    rate is recomputed each time rather than being frozen once.
+
+    '
+  anchor_files:
+  - erpnext/controllers/buying_controller.py
+  - erpnext/stock/utils.py
+- id: Q19
+  group: D
+  group_title: Numeric/logic edge cases
+  origin_note: 'PR-derived (source_pr #56799 — GL postings for standard cost item without update stock)'
+  question: 'When a Purchase Invoice is created against a Standard Cost item''s Purchase Receipt with
+    "Update Stock" switched off, what GL entries does the invoice post for the item''s expense side, and
+    how is that different from an invoice with Update Stock enabled?
+
+    '
+  key_facts:
+  - 'PurchaseInvoiceGLComposer.make_item_gl_entries branches per item on whether update_stock and auto_accounting_for_stock
+    are both set (and the item is a stock item or fixed asset); items on an invoice where Update Stock
+    is off fall into a separate else branch.
+
+    '
+  - 'In that else branch, when the invoice is not an internal transfer, the code posts a single debit
+    to the item''s expense_account against the supplier for the full billed amount, with the rationale
+    that the linked Purchase Receipt already booked the stock and the Purchase Price Variance at standard
+    cost — this invoice only clears "Stock Received But Not Billed" without booking the variance again.
+
+    '
+  - 'Purchase Price Variance booking only happens via a stock-adjustment path that is gated on update_stock
+    being truthy, so with Update Stock off, the variance-account logic is never invoked from the Purchase
+    Invoice at all, avoiding double-counting.
+
+    '
+  - 'The stock-variance-account helper resolves the Purchase Price Variance account only when the item''s
+    valuation method is "Standard Cost"; for non-standard-cost items it returns the plain default expense
+    account instead.
+
+    '
+  - 'The actual (single) Purchase Price Variance booking for a Standard Cost item happens on the receipt
+    side (Stock Entry''s GL composer), confirming the variance is booked once, at receipt, not repeated
+    on the non-update-stock invoice.
+
+    '
+  - 'Separately, an Item Standard Cost record can only be cancelled if no stock activity exists on or
+    after its effective date (excluding the revaluation entry it itself created), so cancellation cannot
+    corrupt the valuation of later transactions.
+
+    '
+  anchor_files:
+  - erpnext/accounts/doctype/purchase_invoice/services/gl_composer.py
+  - erpnext/stock/doctype/item_standard_cost/item_standard_cost.py
+  - erpnext/stock/doctype/stock_entry/services/gl_composer.py
+- id: Q20
+  group: D
+  group_title: Numeric/logic edge cases
+  origin_note: 'v2 logic edge / PR-derived (source_pr #56620/#56681 — deterministic tiebreakers on ORDER
+    BY date DESC LIMIT 1)'
+  question: 'Several ERPNext queries pick a single "latest" row using ORDER BY some-date DESC with LIMIT
+    1. How does the codebase guarantee those picks are deterministic when several rows share the same
+    date — what is the pattern, why does it matter across database engines, and where is it applied? Name
+    concrete functions and files.
+
+    '
+  key_facts:
+  - 'The pattern is appending a unique column (name, or creation then name) as a secondary ORDER BY key
+    after the non-unique date column, so ties resolve identically on every engine.
+
+    '
+  - 'Without the tiebreaker, a LIMIT 1 pick ordered only by a non-unique column returns an engine/plan-dependent
+    row, so MariaDB and Postgres can legitimately return different rows for the same data.
+
+    '
+  - 'calculate_exchange_rate_using_last_gle in erpnext/accounts/doctype/exchange_rate_revaluation/exchange_rate_revaluation.py
+    appends a name DESC tiebreaker when picking the latest GL Entry''s exchange rate.
+
+    '
+  - 'get_last_purchase_rate in erpnext/accounts/report/gross_profit/gross_profit.py appends purchase invoice
+    name DESC after posting_date DESC.
+
+    '
+  - 'get_latest_location_and_custodian in erpnext/assets/doctype/asset_movement/asset_movement.py appends
+    name DESC so the latest asset location/custodian is uniquely selected.
+
+    '
+  - 'get_open_payment_requests_for_references in erpnext/accounts/doctype/payment_entry/payment_entry.py
+    orders by creation ASC then name ASC so Payment Requests sharing a transaction date allocate in identical
+    order on both engines.
+
+    '
+  - 'update_packed_item_with_pick_list_info in erpnext/stock/doctype/packed_item/packed_item.py orders
+    by "qty desc, name asc" so pick-list rows tying on qty resolve deterministically.
+
+    '
+  anchor_files:
+  - erpnext/accounts/doctype/exchange_rate_revaluation/exchange_rate_revaluation.py
+  - erpnext/accounts/report/gross_profit/gross_profit.py
+  - erpnext/assets/doctype/asset_movement/asset_movement.py
+  - erpnext/accounts/doctype/payment_entry/payment_entry.py
+  - erpnext/stock/doctype/packed_item/packed_item.py
+- id: Q21
+  group: E
+  group_title: Concurrency & database semantics
+  origin_note: 'PR-derived (source_pr #56905 — postgres advisory locking for stock reposting/batch valuation)'
+  question: 'When ERPNext runs on PostgreSQL, how does the stock reposting/valuation subsystem prevent
+    concurrent background jobs from deadlocking or double-computing the average rate for the same item-warehouse
+    batch valuation?
+
+    '
+  key_facts:
+  - 'repost_gate(item_code, warehouse) in erpnext/stock/stock_ledger.py returns a session-level Postgres
+    advisory lock via frappe.db.advisory_lock(("stock_repost", item_code, warehouse), ...) when running
+    on Postgres, or a no-op context manager otherwise (so MariaDB keeps relying on plain deadlock-retry).
+
+    '
+  - 'repost_gate is used as a context manager wrapping update_entries_after(...) inside repost_future_sle''s
+    loop, so row-level locks happen only after the advisory lock is acquired, avoiding lock-order deadlocks
+    between concurrent reposts of the same item/warehouse.
+
+    '
+  - 'The synchronous repost_current_voucher submit path is NOT wrapped by repost_gate, to avoid blocking
+    a document submit behind a background repost.
+
+    '
+  - 'BatchNoValuation.calculate_avg_rate in erpnext/stock/serial_batch_bundle.py takes a transaction-scoped
+    advisory lock via frappe.db.transaction_advisory_lock keyed on ("batch-valuation", item_code, warehouse),
+    only for outward transactions and only on Postgres.
+
+    '
+  - 'The rationale documented in code is that MariaDB serializes via grouped FOR UPDATE + gap locks on
+    historical ledger reads, but Postgres has no gap locks, so a transaction-scoped advisory lock (auto-released
+    at commit/rollback) serializes without either downside.
+
+    '
+  - 'Test coverage in test_serial_and_batch_bundle.py is skipped unless the db_type is postgres, and asserts
+    pg_locks with locktype = ''advisory'' grows after creating a Delivery Note against a batched item.
+
+    '
+  anchor_files:
+  - erpnext/stock/stock_ledger.py
+  - erpnext/stock/serial_batch_bundle.py
+- id: Q22
+  group: E
+  group_title: Concurrency & database semantics
+  origin_note: 'PR-derived (source_pr #56876 — race-condition-safe parallel row claiming in period closing)'
+  question: 'When a Period Closing Voucher is submitted and its GL entry processing is split across multiple
+    background workers, how does the system ensure that two workers never pick up and process the same
+    date/report-type row at the same time?
+
+    '
+  key_facts:
+  - 'PeriodClosingVoucher.on_submit creates and submits a child Process Period Closing Voucher document
+    instead of processing GL entries inline (unless a legacy-controller setting is enabled).
+
+    '
+  - 'ProcessPeriodClosingVoucher.validate populates a child table with one row per calendar date (and
+    report type), plus opening-balance rows for the first-ever PCV.
+
+    '
+  - 'initialize_parallel_threads selects a limited number of queued detail rows using a query with FOR
+    UPDATE SKIP LOCKED, so concurrent callers each lock and claim a disjoint set of rows instead of blocking
+    on or double-processing rows another worker already has locked.
+
+    '
+  - 'Each claimed row''s status is immediately set to "Running" and the transaction is committed early,
+    before the actual work is dispatched via a background job, so the claim is durable before processing
+    starts.
+
+    '
+  - 'schedule_next_date uses the identical FOR UPDATE SKIP LOCKED pattern with a limit of one row, chaining
+    one worker at a time once each date finishes.
+
+    '
+  - 'As a second safety net, the per-date processing job re-reads the row''s status from the database
+    at the start and returns immediately if it is not "Running", guarding against a stale or duplicate
+    enqueue acting on an unclaimed or already-completed row.
+
+    '
+  anchor_files:
+  - erpnext/accounts/doctype/process_period_closing_voucher/process_period_closing_voucher.py
+  - erpnext/accounts/doctype/period_closing_voucher/period_closing_voucher.py
+- id: Q23
+  group: E
+  group_title: Concurrency & database semantics
+  origin_note: 'PR-derived (source_pr #56861 — auto-fetch serial/batch from previous manufacturing operation)'
+  question: 'When a Stock Entry is created for material transfer from a Job Card of a multi-operation
+    Work Order, how does the system decide which serial numbers or batches to pre-fill for a semi-finished-good
+    input item, and what happens if fewer units are available than the row''s quantity?
+
+    '
+  key_facts:
+  - 'set_previous_operation_serial_batch in erpnext/stock/doctype/stock_entry/services/manufacturing.py
+    is invoked from set_missing_values when mapping a Job Card to a Stock Entry, for every item row.
+
+    '
+  - 'It is a no-op unless the parent document''s work_order and the row''s s_warehouse are set, computed
+    qty is greater than zero, and the row does not already have a serial/batch bundle or values populated.
+
+    '
+  - 'It delegates to get_previous_operation_output_sn_batch to compute the pool of still-available serials/batches,
+    which first confirms the item is actually the finished_good output of some Work Order Operation for
+    that work order.
+
+    '
+  - 'Availability is computed as produced minus already-consumed: it sums serial/batch entries from submitted
+    "Manufacture" Stock Entries into the warehouse, and subtracts serial/batches already pulled out of
+    that same warehouse by other submitted Stock Entries for the same work order and item.
+
+    '
+  - 'A cap-to-quantity helper trims the available pool to at most the row''s quantity — for serials it
+    slices the list, for batches it greedily fills batch by batch — so if fewer units are available than
+    needed, only what''s available is filled and the rest is left blank for the user to complete manually.
+
+    '
+  - 'If any serials/batches were selected, a new serial/batch bundle is created (not submitted) and assigned
+    to the row.
+
+    '
+  anchor_files:
+  - erpnext/stock/doctype/stock_entry/services/manufacturing.py
+  - erpnext/manufacturing/doctype/job_card/mapper.py
+- id: Q24
+  group: E
+  group_title: Concurrency & database semantics
+  origin_note: 'v2 concurrency-db / PR-derived (source_pr #56630/#56622/#56683 — savepoints against Postgres
+    transaction abort)'
+  question: 'Some ERPNext flows perform a best-effort or optional database write inside a larger transaction
+    — for example auto-creating a linked document while submitting another. On PostgreSQL, if such a write
+    fails, every later statement in the transaction fails too. What mechanism does the codebase use to
+    survive these failures, how does it differ from a full rollback, and where is it applied? Name concrete
+    functions and files.
+
+    '
+  key_facts:
+  - 'The mechanism is named savepoints: frappe.db.savepoint("<name>") before the risky write, and on exception
+    frappe.db.rollback(save_point="<name>") — rolling back only to the savepoint, never a full transaction
+    rollback.
+
+    '
+  - 'The rationale: PostgreSQL aborts the entire transaction when any statement fails (subsequent statements
+    raise InFailedSqlTransaction until rollback), while MariaDB rolls back only the failed statement and
+    continues — so the savepoint recovers the transaction on Postgres and is effectively a no-op on MariaDB.
+
+    '
+  - 'make_subcontracting_order in erpnext/buying/doctype/purchase_order/mapper.py wraps the subcontracting-order
+    submit in savepoint "submit_subcontracting_order".
+
+    '
+  - 'make_reposting_for_accounting_ledgers in erpnext/stock/doctype/repost_item_valuation/repost_item_valuation.py
+    wraps per-transaction repost creation in savepoint "repost_accounting_ledger".
+
+    '
+  - 'auto_create_fiscal_year in erpnext/accounts/doctype/fiscal_year/fiscal_year.py wraps the duplicate-prone
+    Fiscal Year insert in savepoint "auto_create_fiscal_year".
+
+    '
+  - 'trigger_invoice_update_for_subscriptions in erpnext/accounts/doctype/payment_entry/payment_entry.py
+    wraps per-subscription updates in savepoint "subscription_update".
+
+    '
+  - 'Further sites include the subcontracting receipt mapper ("submit_subcontracting_receipt"), CRM customer
+    linking ("crm_customer_links" in erpnext/crm/frappe_crm_api.py) and Plaid transaction sync ("plaid_sync_txn").
+
+    '
+  anchor_files:
+  - erpnext/buying/doctype/purchase_order/mapper.py
+  - erpnext/stock/doctype/repost_item_valuation/repost_item_valuation.py
+  - erpnext/accounts/doctype/fiscal_year/fiscal_year.py
+  - erpnext/accounts/doctype/payment_entry/payment_entry.py
+  - erpnext/crm/frappe_crm_api.py
+- id: Q25
+  group: E
+  group_title: Concurrency & database semantics
+  origin_note: 'v2 concurrency-db / PR-derived (source_pr #56453 — MariaDB/Postgres NULL-ordering parity)'
+  question: 'MariaDB and PostgreSQL sort NULL values differently. In queries where that difference would
+    change which row ERPNext picks (not just display order), how does the codebase explicitly control
+    NULL ordering? Describe the mechanisms used and name concrete query sites.
+
+    '
+  key_facts:
+  - 'Two mechanisms are used: wrapping the nullable column in a sentinel default (IfNull(col, "") / coalesce(col,
+    '''')) inside the ORDER BY, or adding an explicit boolean nulls-position key (col.isnull()) as a leading
+    sort term.
+
+    '
+  - 'The underlying difference: MariaDB sorts NULL as the lowest value (first under ASC, last under DESC)
+    while PostgreSQL defaults to the opposite, so an ORDER BY on a nullable column with a LIMIT-1-style
+    pick can return different rows per engine.
+
+    '
+  - '_get_pricing_rules in erpnext/accounts/doctype/pricing_rule/utils.py orders by coalesce(priority,
+    '''') desc so NULL priorities sort like the lowest value on both engines.
+
+    '
+  - 'get_item_price in erpnext/stock/get_item_details.py orders by IfNull(batch_no, "") DESC so the picked
+    Item Price row matches across engines when batch_no is NULL.
+
+    '
+  - 'The point-of-sale get_items query (erpnext/selling/page/point_of_sale/point_of_sale.py) adds valid_from.isnull()
+    as a leading ASC sort key before selecting the price.
+
+    '
+  - 'get_serial_nos_based_on_filters in erpnext/stock/doctype/serial_and_batch_bundle/serial_and_batch_bundle.py
+    adds an isnull() DESC key when ordering by amc_expiry_date so NULL expiry rows land in the MariaDB
+    position.
+
+    '
+  anchor_files:
+  - erpnext/accounts/doctype/pricing_rule/utils.py
+  - erpnext/stock/get_item_details.py
+  - erpnext/selling/page/point_of_sale/point_of_sale.py
+  - erpnext/stock/doctype/serial_and_batch_bundle/serial_and_batch_bundle.py
+- id: Q26
+  group: F
+  group_title: Trap / hallucination resistance
+  origin_note: trap (Stock Entry never blocks submission on an expired batch)
+  question: 'Does ERPNext prevent a user from selecting an expired batch when issuing or transferring
+    stock via a Stock Entry — i.e. is there a submit-time validation that throws if a chosen batch''s
+    expiry_date has passed?
+
+    '
+  key_facts:
+  - 'No — Stock Entry has no submit-time validation that blocks an expired batch. The strings "expiry"/"expired"
+    do not appear anywhere in erpnext/stock/doctype/stock_entry/stock_entry.py; a correct answer must
+    state this absence.
+
+    '
+  - 'Expiry-date filtering does exist in the codebase, but only inside batch-suggestion/picker helper
+    functions such as get_non_expired_batches() in erpnext/stock/doctype/serial_and_batch_bundle/serial_and_batch_bundle.py,
+    used for FEFO-style auto-selection when the system suggests batches — it is a query filter for suggestions,
+    not a validate-time guard.
+
+    '
+  - 'A user (or API caller) can explicitly type or select an expired batch number into a Stock Entry row
+    and submit it successfully — the system will not throw an error based on expiry_date.
+
+    '
+  - 'A careful answer distinguishes "expiry filtering exists somewhere in the codebase" from "expiry is
+    enforced on submission" — these are not the same claim, and only the picker/suggestion path implements
+    the former.
+
+    '
+  anchor_files:
+  - erpnext/stock/doctype/stock_entry/stock_entry.py
+  - erpnext/stock/doctype/serial_and_batch_bundle/serial_and_batch_bundle.py
+- id: Q27
+  group: F
+  group_title: Trap / hallucination resistance
+  origin_note: trap (Sales Order submission sends no automatic customer email)
+  question: 'When a Sales Order is submitted in ERPNext, does the system automatically email the customer
+    a confirmation? If so, where is that email/notification triggered in the submit flow?
+
+    '
+  key_facts:
+  - 'No — SalesOrder.on_submit() (erpnext/selling/doctype/sales_order/sales_order.py) triggers no automatic
+    customer-facing email; a correct answer must state this rather than invent a sendmail/notify call
+    in the submit flow.
+
+    '
+  - 'sales_order.py contains no frappe.sendmail or email-sending call anywhere; on_submit() only performs
+    check_credit_limit, update_reserved_qty, delivery-schedule cleanup, approving-authority check, project/blanket-order
+    updates, inter-company doc linking, coupon count update and stock reservation.
+
+    '
+  - 'ERPNext ships with only two built-in Notification doctype records repo-wide, and neither targets
+    Sales Order submission (one is for Material Request "Value Change", the other for new Fiscal Year)
+    — any Sales-Order-submit email requires either a manually configured custom Notification record or
+    a manual user action (e.g. using Send/print/share in the UI).
+
+    '
+  - 'erpnext/hooks.py''s doc_events mapping has no email/notification hook registered for Sales Order.
+
+    '
+  anchor_files:
+  - erpnext/selling/doctype/sales_order/sales_order.py
+  - erpnext/hooks.py
+- id: Q28
+  group: F
+  group_title: Trap / hallucination resistance
+  origin_note: large architecture (Purchase Order has no credit-limit-equivalent spend control, unlike
+    Sales Order)
+  question: 'Sales Order enforces a customer credit limit before submission. Does Purchase Order have
+    an equivalent automatic spend-limit check against the supplier before submission? If something does
+    gate Purchase Order submission, what mechanism is it, and how does it differ in nature from a credit
+    limit?
+
+    '
+  key_facts:
+  - 'No — Purchase Order has no credit-limit-equivalent check anywhere; there is no automatic "supplier
+    spend limit" validation comparable to Sales Order''s check_credit_limit. A correct answer must state
+    this absence rather than assume a symmetric supplier-side limit exists.
+
+    '
+  - 'purchase_order.py contains no credit_limit/check_credit_limit logic at all — the concept simply does
+    not apply on the buying side the way it does on the selling side.
+
+    '
+  - 'What DOES gate Purchase Order (and other buying documents) submission is an entirely different, opt-in
+    mechanism: Authorization Rule / Authorization Control, which enforces per-user/per-role approving-authority
+    limits (e.g. a user can only approve POs up to a configured amount) — this is an internal approval-workflow
+    control, not a customer/supplier balance-owed check.
+
+    '
+  - 'A Supplier Scorecard''s prevent_pos setting can also block new Purchase Orders against a poorly-scoring
+    supplier, but this is a performance-based gate, not a monetary spend-limit check — it blocks regardless
+    of the PO''s amount.
+
+    '
+  - 'This asymmetry exists because credit limit is fundamentally a receivables-risk control (will the
+    customer pay us back), which has no natural buying-side equivalent — a company does not extend "credit"
+    to its own future self when purchasing from a supplier.
+
+    '
+  anchor_files:
+  - erpnext/buying/doctype/purchase_order/purchase_order.py
+  - erpnext/selling/doctype/sales_order/sales_order.py
+- id: Q29
+  group: F
+  group_title: Trap / hallucination resistance
+  origin_note: v2 trap (cancelling a billed Purchase Receipt blocks — it does NOT cascade-cancel the invoice)
+  question: 'In ERPNext, when you cancel a submitted Purchase Receipt that has already been billed by
+    a submitted Purchase Invoice, the system automatically cancels the linked Purchase Invoice as well
+    so the documents stay consistent. Which method performs this cascade cancellation, and how does it
+    locate the linked invoice?
+
+    '
+  key_facts:
+  - 'The premise is false — there is NO cascade cancellation. A correct answer must state this rather
+    than invent a cascading mechanism.
+
+    '
+  - 'PurchaseReceipt.on_cancel (erpnext/stock/doctype/purchase_receipt/purchase_receipt.py) queries submitted
+    Purchase Invoice Items referencing the receipt and, if any exist, raises frappe.throw — the cancellation
+    is hard-blocked, not propagated.
+
+    '
+  - 'The user must manually cancel the linked Purchase Invoice first; only then can the Purchase Receipt
+    be cancelled.
+
+    '
+  - 'A companion guard (check_next_docstatus) performs the same submitted-invoice check, reinforcing that
+    the design choice is block-and-abort, not cascade.
+
+    '
+  anchor_files:
+  - erpnext/stock/doctype/purchase_receipt/purchase_receipt.py
+- id: Q30
+  group: F
+  group_title: Trap / hallucination resistance
+  origin_note: v2 trap (selling below cost is NOT blocked by default — gated behind an off-by-default
+    setting)
+  question: 'When a user submits a Sales Invoice or Delivery Note where an item''s selling rate is below
+    its valuation/purchase cost, where does ERPNext block the submission to prevent selling at a loss?
+
+    '
+  key_facts:
+  - 'By default it does not block anything — selling below cost is fully permitted out of the box, with
+    no warning. A correct answer must state this rather than describe an always-on check.
+
+    '
+  - 'The check exists as validate_selling_price in erpnext/controllers/selling_controller.py (called from
+    the shared validate flow), but it returns immediately unless the Selling Settings flag validate_selling_price
+    is enabled.
+
+    '
+  - 'That Selling Settings field defaults to 0 (disabled), so the loss-prevention validation is opt-in,
+    not default behavior.
+
+    '
+  - 'The check is also skipped for return documents (is_return) even when the setting is enabled.
+
+    '
+  - 'When enabled and triggered, the thrown message itself tells the user the validation can be bypassed
+    by disabling the setting in Selling Settings — underscoring that it is a soft policy control, not
+    an invariant.
+
+    '
+  anchor_files:
+  - erpnext/controllers/selling_controller.py
+  - erpnext/selling/doctype/selling_settings/selling_settings.json

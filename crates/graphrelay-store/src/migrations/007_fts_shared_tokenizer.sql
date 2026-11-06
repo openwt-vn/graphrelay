@@ -1,0 +1,17 @@
+-- Content-format bump, not a schema change: `tokenize_name` and
+-- `tokenize_query` now share one `split_words` boundary function (see
+-- `graphrelay-core`'s retrieval pipeline). The shared boundary rule treats
+-- any non-alphanumeric character (not just the previous explicit
+-- `_`/`-`/`.`/`:`/`/`/`\` list) as a split point, which changes decomposition
+-- for identifiers containing other punctuation — notably this codebase's
+-- Lexical-style `$`-prefixed functions (`$applyTransforms`) now decompose to
+-- `apply`+`transforms` (dollar sign dropped as a boundary) instead of the
+-- old `$apply`+`transforms` (dollar sign glued onto the first token, since
+-- '$' wasn't in the old explicit boundary set) — a real, separate bug: a
+-- query naming `$applyTransforms` or `applyTransforms` couldn't match the
+-- old dollar-sign-glued index token either way.
+--
+-- Existing rows only have the old decomposition — clear them and let the
+-- startup backfill (`fts_backfill_needed`, re-triggered for this migration
+-- too) repopulate with the shared-tokenizer output.
+DELETE FROM chunk_fts;

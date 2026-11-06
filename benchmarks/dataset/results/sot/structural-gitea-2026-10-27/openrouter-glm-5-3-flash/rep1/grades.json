@@ -1,0 +1,1154 @@
+[
+  {
+    "task_id": "S06",
+    "arm": "baseline",
+    "coverage": 1.0,
+    "n_facts": 3,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "`AcceptTransferOwnership` | `services/repository/transfer.go` | line 47",
+        "reasoning": "Answer lists AcceptTransferOwnership in transfer.go as a caller."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "`ChangeRepositoryName` | `services/repository/transfer.go` | line 417",
+        "reasoning": "Answer lists ChangeRepositoryName in transfer.go as a caller."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "`StartRepositoryTransfer` | `services/repository/transfer.go` | line 439",
+        "reasoning": "Answer lists StartRepositoryTransfer in transfer.go as a caller."
+      }
+    ]
+  },
+  {
+    "task_id": "S11",
+    "arm": "baseline",
+    "coverage": 1.0,
+    "n_facts": 8,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "`PrepareToStartRunWithConcurrency` | `services/actions/clear_tasks.go` | line 143",
+        "reasoning": "Answer lists PrepareToStartRunWithConcurrency in clear_tasks.go as a direct caller."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "`checkJobsOfCurrentRunAttempt` | `services/actions/job_emitter.go` | line 267",
+        "reasoning": "Answer lists checkJobsOfCurrentRunAttempt in job_emitter.go as a direct caller."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "`findConcurrencyWaiterToWake` | `services/actions/job_emitter.go` | line 166",
+        "reasoning": "Answer lists findConcurrencyWaiterToWake in job_emitter.go as a direct caller."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "covered",
+        "quote": "`ApproveRuns` — `services/actions/approve.go`, call at line 54 (func starts at line 25)",
+        "reasoning": "Answer lists ApproveRuns as a caller of PrepareToStartRunWithConcurrency, a direct caller, making it a second-hop caller."
+      },
+      {
+        "fact_index": 4,
+        "verdict": "covered",
+        "quote": "`checkJobsByRunID` — `services/actions/job_emitter.go`, call at line 79",
+        "reasoning": "Answer lists checkJobsByRunID as a caller of checkJobsOfCurrentRunAttempt, a direct caller, making it second-hop."
+      },
+      {
+        "fact_index": 5,
+        "verdict": "covered",
+        "quote": "`checkRunConcurrency` — `services/actions/job_emitter.go`, call at line 191",
+        "reasoning": "Answer lists checkRunConcurrency as a caller of findConcurrencyWaiterToWake, a direct caller, making it second-hop."
+      },
+      {
+        "fact_index": 6,
+        "verdict": "covered",
+        "quote": "`execRerunPlan` — `services/actions/rerun.go`, call at line 227",
+        "reasoning": "Answer lists execRerunPlan as a caller of PrepareToStartRunWithConcurrency, a direct caller, making it second-hop."
+      },
+      {
+        "fact_index": 7,
+        "verdict": "covered",
+        "quote": "`InsertRun` — `services/actions/run.go`, call at line 107",
+        "reasoning": "Answer lists InsertRun as a caller of PrepareToStartRunWithConcurrency, a direct caller, making it second-hop."
+      }
+    ]
+  },
+  {
+    "task_id": "S03",
+    "arm": "graphrelay",
+    "coverage": 1.0,
+    "n_facts": 3,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "`models/actions/run.go` | `UpdateRepoRunsNumbers(ctx context.Context, repoID int64)`",
+        "reasoning": "Matches gold fact exactly with file and function name."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "`models/actions/task.go` | `CreateTaskForRunner(ctx context.Context, runner *ActionRunner) (*ActionTask, bool, error)`",
+        "reasoning": "Matches gold fact exactly with file and function name."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "`services/repository/delete.go` | `DeleteRepositoryDirectly(ctx context.Context, repoID int64, ignoreOrgTeams ...bool) error`",
+        "reasoning": "Matches gold fact exactly with file and function name."
+      }
+    ]
+  },
+  {
+    "task_id": "S05",
+    "arm": "baseline",
+    "coverage": 1.0,
+    "n_facts": 3,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "`CreateProjectColumn` (API handler, `*context.APIContext`)",
+        "reasoning": "Candidate lists CreateProjectColumn in routers/api/v1/shared/project.go as a direct caller of ToProjectColumn."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "`EditProjectColumn` (API handler, `*context.APIContext`)",
+        "reasoning": "Candidate lists EditProjectColumn in routers/api/v1/shared/project.go as a direct caller of ToProjectColumn."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "`GetProjectColumn` (API handler, `*context.APIContext`)",
+        "reasoning": "Candidate lists GetProjectColumn in routers/api/v1/shared/project.go as a direct caller of ToProjectColumn."
+      }
+    ]
+  },
+  {
+    "task_id": "S05",
+    "arm": "graphrelay",
+    "coverage": 1.0,
+    "n_facts": 3,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "`routers/api/v1/shared/project.go` | `CreateProjectColumn`",
+        "reasoning": "Candidate lists CreateProjectColumn in the correct file as a caller of ToProjectColumn."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "`routers/api/v1/shared/project.go` | `EditProjectColumn`",
+        "reasoning": "Candidate lists EditProjectColumn in the correct file as a caller of ToProjectColumn."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "`routers/api/v1/shared/project.go` | `GetProjectColumn`",
+        "reasoning": "Candidate lists GetProjectColumn in the correct file as a caller of ToProjectColumn."
+      }
+    ]
+  },
+  {
+    "task_id": "S03",
+    "arm": "baseline",
+    "coverage": 1.0,
+    "n_facts": 3,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "`models/actions/run.go` | `UpdateRepoRunsNumbers(ctx context.Context, repoID int64)`",
+        "reasoning": "Answer lists UpdateRepoRunsNumbers in models/actions/run.go as a caller of InTransaction."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "`models/actions/task.go` | `CreateTaskForRunner(ctx context.Context, runner *ActionRunner) (*ActionTask, bool, error)`",
+        "reasoning": "Answer lists CreateTaskForRunner in models/actions/task.go as a caller of InTransaction."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "`services/repository/delete.go` | `DeleteRepositoryDirectly(ctx context.Context, repoID int64, ignoreOrgTeams ...bool) error`",
+        "reasoning": "Answer lists DeleteRepositoryDirectly in services/repository/delete.go as a caller of InTransaction."
+      }
+    ]
+  },
+  {
+    "task_id": "S08",
+    "arm": "graphrelay",
+    "coverage": 1.0,
+    "n_facts": 6,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "`handleSettingsPostPushMirrorSync` | line 407: `mirror_service.AddPushMirrorToQueue(m.ID)`",
+        "reasoning": "Matches direct caller fact exactly with file and function."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "`handleSettingsPostPushMirrorUpdate` | line 449: `mirror_service.AddPushMirrorToQueue(m.ID)`",
+        "reasoning": "Matches direct caller fact exactly with file and function."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "`syncPushMirrorWithSyncOnCommit` | line 258: `AddPushMirrorToQueue(mirror.ID)`",
+        "reasoning": "Matches direct caller fact exactly with file and function."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "covered",
+        "quote": "`SettingsPost` (line 154) | calls **both** `handleSettingsPostPushMirrorSync`",
+        "reasoning": "Matches second-hop caller fact with correct file and function."
+      },
+      {
+        "fact_index": 4,
+        "verdict": "covered",
+        "quote": "`mirrorNotifier.PushCommits` (method, line 25) | calls `syncPushMirrorWithSyncOnCommit(ctx, repo.ID)`",
+        "reasoning": "Matches second-hop caller fact with correct file and function."
+      },
+      {
+        "fact_index": 5,
+        "verdict": "covered",
+        "quote": "`mirrorNotifier.SyncPushCommits` (method, line 29) | calls `syncPushMirrorWithSyncOnCommit(ctx, repo.ID)`",
+        "reasoning": "Matches second-hop caller fact with correct file and function."
+      }
+    ]
+  },
+  {
+    "task_id": "S01",
+    "arm": "graphrelay",
+    "coverage": 1.0,
+    "n_facts": 3,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "`ViewUser` | line 356: `ctx.Data[\"BotAccessTokens\"] = user_setting.NewAccessTokensPanel(ctx, u, ctx.Link+\"/access_tokens\")`",
+        "reasoning": "Answer correctly identifies ViewUser in routers/web/admin/users.go as a caller."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "`CreateAccessToken` | line 135: `panel := NewAccessTokensPanel(ctx, owner, ctx.Link)`",
+        "reasoning": "Answer correctly identifies CreateAccessToken in applications.go as a caller."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "`loadApplicationsData` | line 183: `ctx.Data[\"AccessTokens\"] = NewAccessTokensPanel(ctx, ctx.Doer, ctx.Link)`",
+        "reasoning": "Answer correctly identifies loadApplicationsData in applications.go as a caller."
+      }
+    ]
+  },
+  {
+    "task_id": "S08",
+    "arm": "baseline",
+    "coverage": 1.0,
+    "n_facts": 6,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "`handleSettingsPostPushMirrorSync` | `routers/web/repo/setting/setting.go` | line 407 — queues `m.ID`",
+        "reasoning": "Answer lists this function as a direct caller in the correct file."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "`handleSettingsPostPushMirrorUpdate` | `routers/web/repo/setting/setting.go` | line 449",
+        "reasoning": "Answer lists this function as a direct caller in the correct file."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "`syncPushMirrorWithSyncOnCommit` | `services/mirror/mirror_push.go` | line 258",
+        "reasoning": "Answer lists this function as a direct caller in the correct file."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "covered",
+        "quote": "`SettingsPost` | `routers/web/repo/setting/setting.go` | lines 175 (`case \"push-mirror-sync\"`) and 177 (`case \"push-mirror-update\"`)",
+        "reasoning": "Answer identifies SettingsPost as the second-hop caller of both direct caller functions."
+      },
+      {
+        "fact_index": 4,
+        "verdict": "covered",
+        "quote": "`(*mirrorNotifier).PushCommits` | `services/mirror/notifier.go` | line 26",
+        "reasoning": "Answer lists PushCommits as a second-hop caller via syncPushMirrorWithSyncOnCommit."
+      },
+      {
+        "fact_index": 5,
+        "verdict": "covered",
+        "quote": "`(*mirrorNotifier).SyncPushCommits` | `services/mirror/notifier.go` | line 30",
+        "reasoning": "Answer lists SyncPushCommits as a second-hop caller via syncPushMirrorWithSyncOnCommit."
+      }
+    ]
+  },
+  {
+    "task_id": "S09",
+    "arm": "graphrelay",
+    "coverage": 1.0,
+    "n_facts": 7,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "`verifyAuth` | `routers/api/packages/api.go` (defined at line 70) | line 74: `authGroup := auth.NewGroup(authMethods...)`",
+        "reasoning": "Directly states verifyAuth in routers/api/packages/api.go calls NewGroup."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "`buildAuthGroup` | `routers/api/v1/api.go` (defined at line 849) | line 850: `group := auth.NewGroup(&auth.OAuth2{}, &auth.HTTPSign{}, &auth.Basic{})`",
+        "reasoning": "Directly states buildAuthGroup in routers/api/v1/api.go calls NewGroup."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "`newWebAuthMiddleware` | `routers/web/web.go` (defined at line 102) | line 128: `group := auth_service.NewGroup()`",
+        "reasoning": "States newWebAuthMiddleware in routers/web/web.go calls NewGroup."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "covered",
+        "quote": "`CommonRoutes` | `routers/api/packages/api.go` (defined at line 91) | calls `verifyAuth` at line 96",
+        "reasoning": "States CommonRoutes calls verifyAuth, a direct caller."
+      },
+      {
+        "fact_index": 4,
+        "verdict": "covered",
+        "quote": "`ContainerRoutes` | `routers/api/packages/api.go` (defined at line 509) | calls `verifyAuth` at line 514",
+        "reasoning": "States ContainerRoutes calls verifyAuth, a direct caller."
+      },
+      {
+        "fact_index": 5,
+        "verdict": "covered",
+        "quote": "`Routes` | `routers/api/v1/api.go` (defined at line 937) | calls `buildAuthGroup` at line 958",
+        "reasoning": "States Routes in api.go calls buildAuthGroup."
+      },
+      {
+        "fact_index": 6,
+        "verdict": "covered",
+        "quote": "`Routes` | `routers/web/web.go` (defined at line 256) | calls `newWebAuthMiddleware` at line 303",
+        "reasoning": "States Routes in web.go calls newWebAuthMiddleware."
+      }
+    ]
+  },
+  {
+    "task_id": "S04",
+    "arm": "graphrelay",
+    "coverage": 1.0,
+    "n_facts": 3,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "| 1 | `Account` | `routers/web/user/setting/account.go` | line 48 |",
+        "reasoning": "Answer lists Account as a direct caller in the correct file."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "| 2 | `AccountPost` | `routers/web/user/setting/account.go` | line 66 |",
+        "reasoning": "Answer lists AccountPost as a direct caller in the correct file."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "| 3 | `EmailPost` | `routers/web/user/setting/account.go` | lines 180, 188, 192 |",
+        "reasoning": "Answer lists EmailPost as a direct caller in the correct file."
+      }
+    ]
+  },
+  {
+    "task_id": "S10",
+    "arm": "baseline",
+    "coverage": 0.9286,
+    "n_facts": 14,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "`LoadDBSetting` | `modules/setting/database.go` (line 50, call at 51) | exported wrapper: `loadDBSetting(CfgProvider)`",
+        "reasoning": "Table explicitly lists LoadDBSetting as a direct caller of loadDBSetting."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "`LoadSettings` | `modules/setting/setting.go` (line 220, call at 223) | normal-startup settings loader",
+        "reasoning": "Table explicitly lists LoadSettings as a direct caller."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "`LoadSettingsForInstall` | `modules/setting/setting.go` (line 243, call at 244) | install-time settings loader",
+        "reasoning": "Table explicitly lists LoadSettingsForInstall as a direct caller."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "covered",
+        "quote": "`runCreateUser` | `cmd/admin_user_create.go` (line 103, call at 106) | `setting.LoadSettings()`",
+        "reasoning": "Listed as a second-hop caller via LoadSettings."
+      },
+      {
+        "fact_index": 4,
+        "verdict": "covered",
+        "quote": "`runRecreateTable` | `cmd/doctor.go` (line 99, call at 107) | `setting.LoadDBSetting()`",
+        "reasoning": "Listed as a second-hop caller via LoadDBSetting."
+      },
+      {
+        "fact_index": 5,
+        "verdict": "covered",
+        "quote": "`runDump` | `cmd/dump.go` (line 103, call at 136) | `setting.LoadSettings()`",
+        "reasoning": "Listed as a second-hop caller via LoadSettings."
+      },
+      {
+        "fact_index": 6,
+        "verdict": "covered",
+        "quote": "`runDumpRepository` | `cmd/dump_repo.go` (line 84, call at 88) | `setting.LoadSettings()`",
+        "reasoning": "Listed as a second-hop caller via LoadSettings."
+      },
+      {
+        "fact_index": 7,
+        "verdict": "covered",
+        "quote": "`initDB` | `cmd/helper.go` (line 50, call at 52) | `setting.LoadDBSetting()`",
+        "reasoning": "Listed as a second-hop caller via LoadDBSetting."
+      },
+      {
+        "fact_index": 8,
+        "verdict": "partial",
+        "quote": "`mainTest` in `modelmigration/migrationtest/tests.go:106` (call at 118) also calls `setting.LoadDBSetting()`. Although the file is not a `_test.go` file, it is test-only infrastructure",
+        "reasoning": "The call relationship is correctly identified but the candidate explicitly excludes mainTest from the final answer, contradicting its inclusion as a true second-hop caller."
+      },
+      {
+        "fact_index": 9,
+        "verdict": "covered",
+        "quote": "`InitWebInstallPage` | `routers/init.go` (line 107, call at 109) | `setting.LoadSettingsForInstall()`",
+        "reasoning": "Listed as a second-hop caller via LoadSettingsForInstall."
+      },
+      {
+        "fact_index": 10,
+        "verdict": "covered",
+        "quote": "`InitWebInstalled` | `routers/init.go` (line 114, call at 124) | `setting.LoadSettings()`",
+        "reasoning": "Listed as a second-hop caller via LoadSettings."
+      },
+      {
+        "fact_index": 11,
+        "verdict": "covered",
+        "quote": "`saveConfigReinitDB` | `routers/install/install.go` (line 420, call at 441) | `setting.LoadDBSetting()`",
+        "reasoning": "Listed as a second-hop caller via LoadDBSetting."
+      },
+      {
+        "fact_index": 12,
+        "verdict": "covered",
+        "quote": "`initDBSkipLogger` | `services/doctor/doctor.go` (line 32, call at 34) | `setting.LoadDBSetting()`",
+        "reasoning": "Listed as a second-hop caller via LoadDBSetting."
+      },
+      {
+        "fact_index": 13,
+        "verdict": "partial",
+        "quote": "Other excluded test callers: `tests/test_utils.go:40` and `tests/integration/migration-test/migration_test.go:49`",
+        "reasoning": "The correct file is mentioned as a caller of LoadDBSetting but the function name InitIntegrationTest is never named and the caller is explicitly excluded from the final answer."
+      }
+    ]
+  },
+  {
+    "task_id": "S11",
+    "arm": "graphrelay",
+    "coverage": 1.0,
+    "n_facts": 8,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "`PrepareToStartRunWithConcurrency` | `services/actions/clear_tasks.go` | line 143",
+        "reasoning": "Listed as direct caller in the correct file."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "`checkJobsOfCurrentRunAttempt` | `services/actions/job_emitter.go` | line 267",
+        "reasoning": "Listed as direct caller in the correct file."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "`findConcurrencyWaiterToWake` | `services/actions/job_emitter.go` | line 166",
+        "reasoning": "Listed as direct caller in the correct file."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "covered",
+        "quote": "`ApproveRuns` | `services/actions/approve.go` | `PrepareToStartRunWithConcurrency` | line 54",
+        "reasoning": "Listed as second-hop caller via PrepareToStartRunWithConcurrency."
+      },
+      {
+        "fact_index": 4,
+        "verdict": "covered",
+        "quote": "`checkJobsByRunID` | `services/actions/job_emitter.go` | `checkJobsOfCurrentRunAttempt` | line 79",
+        "reasoning": "Listed as second-hop caller via checkJobsOfCurrentRunAttempt."
+      },
+      {
+        "fact_index": 5,
+        "verdict": "covered",
+        "quote": "`checkRunConcurrency` | `services/actions/job_emitter.go` | `findConcurrencyWaiterToWake` | line 191",
+        "reasoning": "Listed as second-hop caller via findConcurrencyWaiterToWake."
+      },
+      {
+        "fact_index": 6,
+        "verdict": "covered",
+        "quote": "`execRerunPlan` | `services/actions/rerun.go` | `PrepareToStartRunWithConcurrency` | line 227",
+        "reasoning": "Listed as second-hop caller via PrepareToStartRunWithConcurrency."
+      },
+      {
+        "fact_index": 7,
+        "verdict": "covered",
+        "quote": "`InsertRun` | `services/actions/run.go` | `PrepareToStartRunWithConcurrency` | line 107",
+        "reasoning": "Listed as second-hop caller via PrepareToStartRunWithConcurrency."
+      }
+    ]
+  },
+  {
+    "task_id": "S04",
+    "arm": "baseline",
+    "coverage": 1.0,
+    "n_facts": 3,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "`Account`",
+        "reasoning": "Answer lists Account as a caller in the table and details section."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "**`AccountPost`** (defined at line 54)",
+        "reasoning": "Answer lists AccountPost as a caller with call site detail."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "**`EmailPost`** (defined at line 104)",
+        "reasoning": "Answer lists EmailPost as a caller with multiple call sites."
+      }
+    ]
+  },
+  {
+    "task_id": "S07",
+    "arm": "graphrelay",
+    "coverage": 1.0,
+    "n_facts": 11,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "`services/migrations/codebase.go` | `NewCodebaseDownloader` (call at line 88)",
+        "reasoning": "Matches fact exactly with file and function."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "`services/migrations/gitea_downloader.go` | `NewGiteaDownloader` (call at line 89)",
+        "reasoning": "Matches fact exactly with file and function."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "`services/migrations/github.go` | `NewGithubDownloaderV3` (call at line 110)",
+        "reasoning": "Matches fact exactly with file and function."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "covered",
+        "quote": "`services/migrations/gogs.go` | `NewGogsDownloader` (call at line 87)",
+        "reasoning": "Matches fact exactly with file and function."
+      },
+      {
+        "fact_index": 4,
+        "verdict": "covered",
+        "quote": "`services/migrations/onedev.go` | `NewOneDevDownloader` (call at line 91)",
+        "reasoning": "Matches fact exactly with file and function."
+      },
+      {
+        "fact_index": 5,
+        "verdict": "covered",
+        "quote": "`services/migrations/codebase.go` | `(*CodebaseDownloaderFactory).New` (line 34) | `NewCodebaseDownloader`",
+        "reasoning": "Matches fact exactly, CodebaseDownloaderFactory.New calling NewCodebaseDownloader."
+      },
+      {
+        "fact_index": 6,
+        "verdict": "covered",
+        "quote": "`services/migrations/gitbucket.go` | `NewGitBucketDownloader` (line 73) | `NewGithubDownloaderV3`",
+        "reasoning": "Matches fact exactly with file and function as second-hop caller."
+      },
+      {
+        "fact_index": 7,
+        "verdict": "covered",
+        "quote": "`services/migrations/gitea_downloader.go` | `(*GiteaDownloaderFactory).New` (line 40) | `NewGiteaDownloader`",
+        "reasoning": "Matches fact exactly."
+      },
+      {
+        "fact_index": 8,
+        "verdict": "covered",
+        "quote": "`services/migrations/github.go` | `(*GithubDownloaderV3Factory).New` (line 41) | `NewGithubDownloaderV3`",
+        "reasoning": "Matches fact exactly."
+      },
+      {
+        "fact_index": 9,
+        "verdict": "covered",
+        "quote": "`services/migrations/gogs.go` | `(*GogsDownloaderFactory).New` (line 35) | `NewGogsDownloader`",
+        "reasoning": "Matches fact exactly."
+      },
+      {
+        "fact_index": 10,
+        "verdict": "covered",
+        "quote": "`services/migrations/onedev.go` | `(*OneDevDownloaderFactory).New` (line 43) | `NewOneDevDownloader`",
+        "reasoning": "Matches fact exactly."
+      }
+    ]
+  },
+  {
+    "task_id": "S07",
+    "arm": "baseline",
+    "coverage": 0.7727,
+    "n_facts": 11,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "`NewCodebaseDownloader` | `services/migrations/codebase.go:79`",
+        "reasoning": "Candidate lists NewCodebaseDownloader in codebase.go as a direct caller of basicAuthorization."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "`NewGiteaDownloader` | `services/migrations/gitea_downloader.go:88`",
+        "reasoning": "Candidate lists NewGiteaDownloader in gitea_downloader.go as a direct caller of basicAuthorization."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "partial",
+        "quote": "`(*GithubDownloaderV3Factory).New` | `services/migrations/github.go:41`",
+        "reasoning": "Candidate identifies github.go correctly but attributes the direct call to GithubDownloaderV3Factory.New instead of NewGithubDownloaderV3."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "covered",
+        "quote": "`NewGogsDownloader` | `services/migrations/gogs.go:84`",
+        "reasoning": "Candidate lists NewGogsDownloader in gogs.go as a direct caller of basicAuthorization."
+      },
+      {
+        "fact_index": 4,
+        "verdict": "covered",
+        "quote": "`NewOneDevDownloader` | `services/migrations/onedev.go:86`",
+        "reasoning": "Candidate lists NewOneDevDownloader in onedev.go as a direct caller of basicAuthorization."
+      },
+      {
+        "fact_index": 5,
+        "verdict": "covered",
+        "quote": "`(*CodebaseDownloaderFactory).New` | `services/migrations/codebase.go:34` | calls `NewCodebaseDownloader` at line 50",
+        "reasoning": "Candidate correctly lists CodebaseDownloaderFactory.New as a second-hop caller calling NewCodebaseDownloader."
+      },
+      {
+        "fact_index": 6,
+        "verdict": "missing",
+        "quote": "",
+        "reasoning": "Candidate never mentions NewGitBucketDownloader or gitbucket.go anywhere in the answer."
+      },
+      {
+        "fact_index": 7,
+        "verdict": "covered",
+        "quote": "`(*GiteaDownloaderFactory).New` | `services/migrations/gitea_downloader.go:40` | calls `NewGiteaDownloader` at line 63",
+        "reasoning": "Candidate correctly lists GiteaDownloaderFactory.New as a second-hop caller calling NewGiteaDownloader."
+      },
+      {
+        "fact_index": 8,
+        "verdict": "missing",
+        "quote": "",
+        "reasoning": "Candidate claims GithubDownloaderV3Factory.New is itself a direct caller of basicAuthorization, contradicting the gold fact that it is a second-hop caller via NewGithubDownloaderV3."
+      },
+      {
+        "fact_index": 9,
+        "verdict": "covered",
+        "quote": "`(*GogsDownloaderFactory).New` | `services/migrations/gogs.go:35` | calls `NewGogsDownloader` at line 51",
+        "reasoning": "Candidate correctly lists GogsDownloaderFactory.New as a second-hop caller calling NewGogsDownloader."
+      },
+      {
+        "fact_index": 10,
+        "verdict": "covered",
+        "quote": "`(*OneDevDownloaderFactory).New` | `services/migrations/onedev.go:43` | calls `NewOneDevDownloader` at line 56",
+        "reasoning": "Candidate correctly lists OneDevDownloaderFactory.New as a second-hop caller calling NewOneDevDownloader."
+      }
+    ]
+  },
+  {
+    "task_id": "S01",
+    "arm": "baseline",
+    "coverage": 1.0,
+    "n_facts": 3,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "when the viewed admin user is a bot (`u.IsTypeBot()`), renders the token panel into the admin user view page",
+        "reasoning": "ViewUser in routers/web/admin/users.go is identified as a direct caller."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "`CreateAccessToken(ctx *context.Context, owner *user_model.User)` (line 67)",
+        "reasoning": "CreateAccessToken in applications.go is listed as a direct caller."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "`loadApplicationsData(ctx *context.Context)` (line 182)",
+        "reasoning": "loadApplicationsData in applications.go is listed as a direct caller."
+      }
+    ]
+  },
+  {
+    "task_id": "S09",
+    "arm": "baseline",
+    "coverage": 1.0,
+    "n_facts": 7,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "`verifyAuth` | `routers/api/packages/api.go` (line 70) | line 74: `authGroup := auth.NewGroup(authMethods...)`",
+        "reasoning": "Matches gold fact exactly."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "`buildAuthGroup` | `routers/api/v1/api.go` (line 849) | line 850: `group := auth.NewGroup",
+        "reasoning": "Matches gold fact exactly."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "`newWebAuthMiddleware` | `routers/web/web.go` (line 102) | line 128: `group := auth_service.NewGroup()`",
+        "reasoning": "Matches gold fact exactly."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "covered",
+        "quote": "`CommonRoutes` | `routers/api/packages/api.go` (line 91) | `verifyAuth(...)` at line 96",
+        "reasoning": "Matches gold fact exactly."
+      },
+      {
+        "fact_index": 4,
+        "verdict": "covered",
+        "quote": "`ContainerRoutes` | `routers/api/packages/api.go` (line 509) | `verifyAuth(...)` at line 514",
+        "reasoning": "Matches gold fact exactly."
+      },
+      {
+        "fact_index": 5,
+        "verdict": "covered",
+        "quote": "`Routes` | `routers/api/v1/api.go` (line 937) | `buildAuthGroup()` at line 958",
+        "reasoning": "Matches gold fact exactly."
+      },
+      {
+        "fact_index": 6,
+        "verdict": "covered",
+        "quote": "`Routes` | `routers/web/web.go` (line 256) | `newWebAuthMiddleware()` at line 303",
+        "reasoning": "Matches gold fact exactly."
+      }
+    ]
+  },
+  {
+    "task_id": "S12",
+    "arm": "baseline",
+    "coverage": 1.0,
+    "n_facts": 16,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "`prepareSignInPageData` | `routers/web/auth/auth.go` | line 269",
+        "reasoning": "Table lists prepareSignInPageData in auth.go as a direct caller."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "`prepareSignUpPageData` | `routers/web/auth/auth.go` | line 528",
+        "reasoning": "Table lists prepareSignUpPageData in auth.go as a direct caller."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "`prepareLinkAccountPageData` | `routers/web/auth/linkaccount.go` | line 42",
+        "reasoning": "Table lists prepareLinkAccountPageData in linkaccount.go as a direct caller."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "covered",
+        "quote": "`prepareConnectOpenIDPageData` | `routers/web/auth/openid.go` | line 277",
+        "reasoning": "Table lists prepareConnectOpenIDPageData in openid.go as a direct caller."
+      },
+      {
+        "fact_index": 4,
+        "verdict": "covered",
+        "quote": "`prepareRegisterOpenIDPageData` | `routers/web/auth/openid.go` | line 338",
+        "reasoning": "Table lists prepareRegisterOpenIDPageData in openid.go as a direct caller."
+      },
+      {
+        "fact_index": 5,
+        "verdict": "covered",
+        "quote": "`SignIn` | `routers/web/auth/auth.go` | line 284",
+        "reasoning": "SignIn listed as caller of prepareSignInPageData, a direct caller."
+      },
+      {
+        "fact_index": 6,
+        "verdict": "covered",
+        "quote": "`SignInPost` | `routers/web/auth/auth.go` | line 298",
+        "reasoning": "SignInPost listed as caller of prepareSignInPageData."
+      },
+      {
+        "fact_index": 7,
+        "verdict": "covered",
+        "quote": "`SignUp` | `routers/web/auth/auth.go` | line 540",
+        "reasoning": "SignUp listed as caller of prepareSignUpPageData."
+      },
+      {
+        "fact_index": 8,
+        "verdict": "covered",
+        "quote": "`SignUpPost` | `routers/web/auth/auth.go` | line 549",
+        "reasoning": "SignUpPost listed as caller of prepareSignUpPageData."
+      },
+      {
+        "fact_index": 9,
+        "verdict": "covered",
+        "quote": "`LinkAccount` | `routers/web/auth/linkaccount.go` | line 49",
+        "reasoning": "LinkAccount listed as caller of prepareLinkAccountPageData."
+      },
+      {
+        "fact_index": 10,
+        "verdict": "covered",
+        "quote": "`LinkAccountPostRegister` | `routers/web/auth/linkaccount.go` | line 184",
+        "reasoning": "LinkAccountPostRegister listed as caller of prepareLinkAccountPageData."
+      },
+      {
+        "fact_index": 11,
+        "verdict": "covered",
+        "quote": "`LinkAccountPostSignIn` | `routers/web/auth/linkaccount.go` | line 121",
+        "reasoning": "LinkAccountPostSignIn listed as caller of prepareLinkAccountPageData."
+      },
+      {
+        "fact_index": 12,
+        "verdict": "covered",
+        "quote": "`ConnectOpenID` | `routers/web/auth/openid.go` | line 283",
+        "reasoning": "ConnectOpenID listed as caller of prepareConnectOpenIDPageData."
+      },
+      {
+        "fact_index": 13,
+        "verdict": "covered",
+        "quote": "`ConnectOpenIDPost` | `routers/web/auth/openid.go` | line 297",
+        "reasoning": "ConnectOpenIDPost listed as caller of prepareConnectOpenIDPageData."
+      },
+      {
+        "fact_index": 14,
+        "verdict": "covered",
+        "quote": "`RegisterOpenID` | `routers/web/auth/openid.go` | line 346",
+        "reasoning": "RegisterOpenID listed as caller of prepareRegisterOpenIDPageData."
+      },
+      {
+        "fact_index": 15,
+        "verdict": "covered",
+        "quote": "`RegisterOpenIDPost` | `routers/web/auth/openid.go` | line 364",
+        "reasoning": "RegisterOpenIDPost listed as caller of prepareRegisterOpenIDPageData."
+      }
+    ]
+  },
+  {
+    "task_id": "S10",
+    "arm": "graphrelay",
+    "coverage": 1.0,
+    "n_facts": 14,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "`LoadDBSetting` | `modules/setting/database.go` | line 51 — thin exported wrapper: `loadDBSetting(CfgProvider)`",
+        "reasoning": "Answer lists LoadDBSetting as a direct caller of loadDBSetting."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "`LoadSettings` | `modules/setting/setting.go` | line 223 — normal-startup settings loader",
+        "reasoning": "Answer lists LoadSettings as a direct caller."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "`LoadSettingsForInstall` | `modules/setting/setting.go` | line 244 — install-phase settings loader",
+        "reasoning": "Answer lists LoadSettingsForInstall as a direct caller."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "covered",
+        "quote": "`runCreateUser` | `cmd/admin_user_create.go` (line 106) |",
+        "reasoning": "Listed as a second-hop caller via LoadSettings."
+      },
+      {
+        "fact_index": 4,
+        "verdict": "covered",
+        "quote": "`runRecreateTable` | `cmd/doctor.go` (line 107) |",
+        "reasoning": "Listed as a second-hop caller via LoadDBSetting."
+      },
+      {
+        "fact_index": 5,
+        "verdict": "covered",
+        "quote": "`runDump` | `cmd/dump.go` (line 136) |",
+        "reasoning": "Listed as a second-hop caller via LoadSettings."
+      },
+      {
+        "fact_index": 6,
+        "verdict": "covered",
+        "quote": "`runDumpRepository` | `cmd/dump_repo.go` (line 88) |",
+        "reasoning": "Listed as a second-hop caller via LoadSettings."
+      },
+      {
+        "fact_index": 7,
+        "verdict": "covered",
+        "quote": "`initDB` | `cmd/helper.go` (line 52) |",
+        "reasoning": "Listed as a second-hop caller via LoadDBSetting."
+      },
+      {
+        "fact_index": 8,
+        "verdict": "covered",
+        "quote": "`mainTest` — `modelmigration/migrationtest/tests.go` (line 118, calls `LoadDBSetting`)",
+        "reasoning": "Listed as a second-hop caller, despite being flagged with a caveat about test-support status."
+      },
+      {
+        "fact_index": 9,
+        "verdict": "covered",
+        "quote": "`InitWebInstallPage` | `routers/init.go` (line 109) |",
+        "reasoning": "Listed as a second-hop caller via LoadSettingsForInstall."
+      },
+      {
+        "fact_index": 10,
+        "verdict": "covered",
+        "quote": "`InitWebInstalled` | `routers/init.go` (line 124) |",
+        "reasoning": "Listed as a second-hop caller via LoadSettings."
+      },
+      {
+        "fact_index": 11,
+        "verdict": "covered",
+        "quote": "`saveConfigReinitDB` | `routers/install/install.go` (line 441) |",
+        "reasoning": "Listed as a second-hop caller via LoadDBSetting."
+      },
+      {
+        "fact_index": 12,
+        "verdict": "covered",
+        "quote": "`initDBSkipLogger` | `services/doctor/doctor.go` (line 34) |",
+        "reasoning": "Listed as a second-hop caller via LoadDBSetting."
+      },
+      {
+        "fact_index": 13,
+        "verdict": "covered",
+        "quote": "`InitIntegrationTest` — `tests/test_utils.go` (line 40, calls `LoadDBSetting`)",
+        "reasoning": "Listed as a second-hop caller despite being flagged with a caveat about test-support status."
+      }
+    ]
+  },
+  {
+    "task_id": "S02",
+    "arm": "graphrelay",
+    "coverage": 1.0,
+    "n_facts": 3,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "`func (b *Indexer) Search(ctx context.Context, opts *internal.SearchOptions) (int64, []*internal.SearchResult, []*internal.SearchResultLanguages, error)`",
+        "reasoning": "Candidate lists Indexer.Search in modules/indexer/code/elasticsearch/elasticsearch.go as a caller of TermsQuery."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "`func (b *Indexer) doDelete(ctx context.Context, repoID int64) error`",
+        "reasoning": "Candidate lists Indexer.doDelete in modules/indexer/code/elasticsearch/elasticsearch.go as a caller of TermsQuery."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "`func (b *Indexer) Search(ctx context.Context, options *internal.SearchOptions) (*internal.SearchResult, error)`",
+        "reasoning": "Candidate lists Indexer.Search in modules/indexer/issues/elasticsearch/elasticsearch.go as a caller of TermsQuery."
+      }
+    ]
+  },
+  {
+    "task_id": "S12",
+    "arm": "graphrelay",
+    "coverage": 1.0,
+    "n_facts": 16,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "`prepareSignInPageData` | `routers/web/auth/auth.go` | line 269",
+        "reasoning": "Table lists prepareSignInPageData as direct caller in auth.go."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "`prepareSignUpPageData` | `routers/web/auth/auth.go` | line 528",
+        "reasoning": "Table lists prepareSignUpPageData as direct caller in auth.go."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "`prepareLinkAccountPageData` | `routers/web/auth/linkaccount.go` | line 42",
+        "reasoning": "Table lists prepareLinkAccountPageData as direct caller in linkaccount.go."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "covered",
+        "quote": "`prepareConnectOpenIDPageData` | `routers/web/auth/openid.go` | line 277",
+        "reasoning": "Table lists prepareConnectOpenIDPageData as direct caller in openid.go."
+      },
+      {
+        "fact_index": 4,
+        "verdict": "covered",
+        "quote": "`prepareRegisterOpenIDPageData` | `routers/web/auth/openid.go` | line 338",
+        "reasoning": "Table lists prepareRegisterOpenIDPageData as direct caller in openid.go."
+      },
+      {
+        "fact_index": 5,
+        "verdict": "covered",
+        "quote": "`SignIn` — `routers/web/auth/auth.go` (line 284)",
+        "reasoning": "SignIn listed as second-hop caller via prepareSignInPageData in auth.go."
+      },
+      {
+        "fact_index": 6,
+        "verdict": "covered",
+        "quote": "`SignInPost` — `routers/web/auth/auth.go` (line 298)",
+        "reasoning": "SignInPost listed as second-hop caller via prepareSignInPageData in auth.go."
+      },
+      {
+        "fact_index": 7,
+        "verdict": "covered",
+        "quote": "`SignUp` — `routers/web/auth/auth.go` (line 540)",
+        "reasoning": "SignUp listed as second-hop caller via prepareSignUpPageData in auth.go."
+      },
+      {
+        "fact_index": 8,
+        "verdict": "covered",
+        "quote": "`SignUpPost` — `routers/web/auth/auth.go` (line 549)",
+        "reasoning": "SignUpPost listed as second-hop caller via prepareSignUpPageData in auth.go."
+      },
+      {
+        "fact_index": 9,
+        "verdict": "covered",
+        "quote": "`LinkAccount` — `routers/web/auth/linkaccount.go` (line 49)",
+        "reasoning": "LinkAccount listed as second-hop caller via prepareLinkAccountPageData in linkaccount.go."
+      },
+      {
+        "fact_index": 10,
+        "verdict": "covered",
+        "quote": "`LinkAccountPostRegister` — `routers/web/auth/linkaccount.go` (line 184)",
+        "reasoning": "LinkAccountPostRegister listed as second-hop caller via prepareLinkAccountPageData in linkaccount.go."
+      },
+      {
+        "fact_index": 11,
+        "verdict": "covered",
+        "quote": "`LinkAccountPostSignIn` — `routers/web/auth/linkaccount.go` (line 121)",
+        "reasoning": "LinkAccountPostSignIn listed as second-hop caller via prepareLinkAccountPageData in linkaccount.go."
+      },
+      {
+        "fact_index": 12,
+        "verdict": "covered",
+        "quote": "`ConnectOpenID` — `routers/web/auth/openid.go` (line 283)",
+        "reasoning": "ConnectOpenID listed as second-hop caller via prepareConnectOpenIDPageData in openid.go."
+      },
+      {
+        "fact_index": 13,
+        "verdict": "covered",
+        "quote": "`ConnectOpenIDPost` — `routers/web/auth/openid.go` (line 297)",
+        "reasoning": "ConnectOpenIDPost listed as second-hop caller via prepareConnectOpenIDPageData in openid.go."
+      },
+      {
+        "fact_index": 14,
+        "verdict": "covered",
+        "quote": "`RegisterOpenID` — `routers/web/auth/openid.go` (line 346)",
+        "reasoning": "RegisterOpenID listed as second-hop caller via prepareRegisterOpenIDPageData in openid.go."
+      },
+      {
+        "fact_index": 15,
+        "verdict": "covered",
+        "quote": "`RegisterOpenIDPost` — `routers/web/auth/openid.go` (line 364)",
+        "reasoning": "RegisterOpenIDPost listed as second-hop caller via prepareRegisterOpenIDPageData in openid.go."
+      }
+    ]
+  },
+  {
+    "task_id": "S06",
+    "arm": "graphrelay",
+    "coverage": 1.0,
+    "n_facts": 3,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "`AcceptTransferOwnership` | `services/repository/transfer.go` | line 47",
+        "reasoning": "Answer lists AcceptTransferOwnership in transfer.go as a direct caller."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "`ChangeRepositoryName` | `services/repository/transfer.go` | line 417",
+        "reasoning": "Answer lists ChangeRepositoryName in transfer.go as a direct caller."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "`StartRepositoryTransfer` | `services/repository/transfer.go` | line 439",
+        "reasoning": "Answer lists StartRepositoryTransfer in transfer.go as a direct caller."
+      }
+    ]
+  },
+  {
+    "task_id": "S02",
+    "arm": "baseline",
+    "coverage": 1.0,
+    "n_facts": 3,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "`(*Indexer).Search` — `modules/indexer/code/elasticsearch/elasticsearch.go`",
+        "reasoning": "Candidate lists Search in code/elasticsearch as a caller of TermsQuery."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "`(*Indexer).doDelete` — `modules/indexer/code/elasticsearch/elasticsearch.go`",
+        "reasoning": "Candidate correctly identifies doDelete in code/elasticsearch as calling TermsQuery."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "`(*Indexer).Search` — `modules/indexer/issues/elasticsearch/elasticsearch.go`",
+        "reasoning": "Candidate correctly identifies Search in issues/elasticsearch as calling TermsQuery."
+      }
+    ]
+  }
+]

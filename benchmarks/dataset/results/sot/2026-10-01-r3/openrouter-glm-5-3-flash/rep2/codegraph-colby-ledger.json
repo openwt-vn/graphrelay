@@ -1,0 +1,77 @@
+{
+  "arm": "codegraph-colby",
+  "provider": "openrouter-glm-5-3-flash",
+  "model": "openrouter-glm-5-3-flash",
+  "base_url": "http://localhost:4000",
+  "pricing": {
+    "in": 0.07125,
+    "out": 0.2375,
+    "cache_read": 0.01425,
+    "cache_write": 0.07125
+  },
+  "max_turns": 30,
+  "runs": [
+    {
+      "task_id": "Q01",
+      "cost_usd": 0.0067,
+      "tokens": {
+        "input": 32163,
+        "output": 8625,
+        "cache_read": 167104,
+        "cache_write": 0
+      }
+    },
+    {
+      "task_id": "Q06",
+      "cost_usd": 0.0025,
+      "tokens": {
+        "input": 15015,
+        "output": 3352,
+        "cache_read": 47040,
+        "cache_write": 0
+      }
+    },
+    {
+      "task_id": "Q11",
+      "cost_usd": 0.0055,
+      "tokens": {
+        "input": 28056,
+        "output": 3003,
+        "cache_read": 192832,
+        "cache_write": 0
+      }
+    },
+    {
+      "task_id": "Q16",
+      "cost_usd": 0.0009,
+      "tokens": {
+        "input": 8288,
+        "output": 863,
+        "cache_read": 4544,
+        "cache_write": 0
+      }
+    },
+    {
+      "task_id": "Q21",
+      "cost_usd": 0.0047,
+      "tokens": {
+        "input": 35754,
+        "output": 4409,
+        "cache_read": 75968,
+        "cache_write": 0
+      }
+    },
+    {
+      "task_id": "Q26",
+      "cost_usd": 0.0036,
+      "tokens": {
+        "input": 16376,
+        "output": 5402,
+        "cache_read": 79680,
+        "cache_write": 0
+      }
+    }
+  ],
+  "total_cost_usd": 0.0239,
+  "total_tokens": 728474
+}

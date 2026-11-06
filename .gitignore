@@ -1,0 +1,30 @@
+/target
+.graphrelay/
+graphrelay.toml
+*.onnx
+
+.DS_Store
+
+.env*
+
+graphify-out/
+
+.claude/agents
+
+index.scip
+
+benchmarks/dataset/repos/
+benchmarks/dataset/harness/proxy/.venv/
+benchmarks/dataset/harness/laya-venv/
+benchmarks/dataset/harness/__pycache__/__pycache__/
+*.pyc
+
+# run.py regenerates these per run
+benchmarks/dataset/results/.mcp-*.json
+
+
+**/*/node_modules
+# Raw agent transcripts quote upstream (GPL-3.0 etc.) source; keep only summaries/grades/ledgers in git
+benchmarks/dataset/results/**/transcripts/
+benchmarks/dataset/results/**/*-results.jsonl
+benchmarks/dataset/results/**/*.log

@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "graphrelay": {
+      "type": "http",
+      "url": "http://localhost:3030/erpnext/mcp"
+    }
+  }
+}

@@ -1,0 +1,915 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GraphRelay</title>
+<meta name="description" content="GraphRelay indexes a repository into a symbol and call graph and lets a coding agent ask for relevant code, callers and callees, and the blast radius of a change. One local Rust binary: no cloud, no API key, no embedding model.">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#050505">
+<meta property="og:type" content="website">
+<meta property="og:title" content="GraphRelay: code search that follows the call graph">
+<meta property="og:description" content="A local tool that indexes a repository into a symbol and call graph for coding agents. One Rust binary, MCP + REST + web UI on one port. Your code stays on your machine.">
+<meta property="og:image" content="assets/logo.png">
+<meta name="twitter:card" content="summary">
+<link rel="icon" type="image/png" href="assets/logo.png">
+<link rel="apple-touch-icon" href="assets/logo.png">
+<script>
+  // Hide animated start states only when motion will actually run; undo if the library never loads.
+  (function () {
+    var d = document.documentElement;
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!reduce) {
+      d.classList.add('motion-ready');
+      setTimeout(function () { if (!window.__motionOK) d.classList.remove('motion-ready'); }, 3500);
+    }
+  })();
+</script>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #050505;
+    --panel: #0C0C0D;
+    --panel-2: #161618;
+    --line: #2A2A2E;
+    --line-2: #3A3A40;
+    --fg: #F5F5F4;
+    --grey: #A1A1AA;
+    --grey-2: #8A8A92;
+    --grey-3: #6B6B72;
+    --accent: #FF5A1F;
+    --accent-2: #FF8A4C;
+    --sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    --gutter: clamp(16px, 4vw, 48px);
+    --maxw: 1180px;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg);
+    font-family: var(--sans); font-size: 17px; line-height: 1.6;
+    overflow-x: hidden; -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--fg); text-decoration-color: var(--line-2); text-underline-offset: 3px; }
+  a:hover { text-decoration-color: var(--accent); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+  code, pre, .mono { font-family: var(--mono); }
+  code { font-size: .92em; color: var(--fg); background: var(--panel-2); border: 1px solid var(--line); border-radius: 5px; padding: .05em .35em; }
+  img, svg { max-width: 100%; }
+  .wrap { width: 100%; max-width: var(--maxw); margin: 0 auto; padding: 0 var(--gutter); }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+  .skip { position: absolute; left: 12px; top: -60px; z-index: 50; background: var(--fg); color: var(--bg); padding: 8px 14px; border-radius: 6px; font-weight: 600; text-decoration: none; }
+  .skip:focus { top: 12px; }
+
+  /* Header */
+  .top { position: sticky; top: 0; z-index: 20; background: rgba(5,5,5,.82); backdrop-filter: saturate(140%) blur(10px); -webkit-backdrop-filter: saturate(140%) blur(10px); border-bottom: 1px solid transparent; }
+  .top.scrolled { border-bottom-color: var(--line); }
+  .top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; height: 60px; }
+  .brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 650; letter-spacing: -.01em; }
+  .brand img { width: 26px; height: 26px; }
+  .nav { display: flex; gap: clamp(10px, 2.4vw, 28px); font-size: 14px; }
+  .nav a { color: var(--grey); text-decoration: none; }
+  .nav a:hover { color: var(--fg); }
+  @media (max-width: 720px) { .nav .opt { display: none; } }
+  .progress { position: absolute; left: 0; bottom: -1px; height: 1px; width: 100%; background: var(--accent); transform-origin: 0 50%; transform: scaleX(0); }
+
+  /* Shared type */
+  .eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--grey-2); display: inline-flex; align-items: center; gap: 10px; }
+  .eyebrow b { color: var(--accent); font-weight: 600; }
+  h1, h2, h3 { margin: 0; letter-spacing: -.025em; line-height: 1.06; font-weight: 650; }
+  h2 { font-size: clamp(30px, 5.2vw, 56px); margin-top: 14px; }
+  h3 { font-size: 19px; letter-spacing: -.01em; line-height: 1.25; }
+  .lead { color: var(--grey); font-size: clamp(17px, 1.9vw, 20px); max-width: 62ch; margin: 18px 0 0; }
+  section { position: relative; }
+  .sec { padding: clamp(80px, 12vw, 150px) 0; border-top: 1px solid var(--line); }
+  .word { display: inline-block; white-space: nowrap; }
+  .clip { display: inline-block; overflow: hidden; vertical-align: top; padding-bottom: .08em; margin-bottom: -.08em; }
+  .clip > span { display: inline-block; }
+  .ch { display: inline-block; }
+
+  /* Hero */
+  .hero { position: relative; overflow: hidden; padding: clamp(40px, 7vw, 90px) 0 clamp(60px, 8vw, 110px); }
+  .hero-bg { position: absolute; inset: -10% 0 0 0; pointer-events: none; z-index: 0; }
+  .hero-grid { position: absolute; inset: 0; background-image: radial-gradient(var(--line) 1px, transparent 1.2px); background-size: 28px 28px; mask-image: radial-gradient(ellipse 70% 60% at 65% 40%, #000 30%, transparent 75%); -webkit-mask-image: radial-gradient(ellipse 70% 60% at 65% 40%, #000 30%, transparent 75%); opacity: .7; }
+  .hero-ring { position: absolute; right: -12vw; top: -6vw; width: 58vw; max-width: 760px; aspect-ratio: 1; border: 1px solid var(--line); border-radius: 50%; }
+  .hero-ring.r2 { right: -4vw; top: 6vw; width: 36vw; max-width: 480px; border-color: #1c1c1f; }
+  .hero .wrap { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(32px, 5vw, 56px); align-items: center; }
+  @media (min-width: 980px) { .hero .wrap { grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr); } }
+  .hero h1 { font-size: clamp(42px, 7.6vw, 92px); margin-top: 18px; letter-spacing: -.035em; }
+  .hero h1 .accent-dot { color: var(--accent); }
+  .hero .lead { margin-top: 22px; }
+  .cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
+  .btn { display: inline-flex; align-items: center; gap: 10px; min-height: 46px; padding: 0 20px; border-radius: 999px; font-weight: 600; font-size: 15px; text-decoration: none; border: 1px solid var(--line-2); color: var(--fg); background: transparent; cursor: pointer; font-family: inherit; }
+  .btn.primary { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+  .btn .arr { display: inline-block; }
+  .facts-line { margin-top: 26px; display: flex; flex-wrap: wrap; gap: 8px 18px; font-family: var(--mono); font-size: 13px; color: var(--grey-2); padding: 0; list-style: none; }
+  .facts-line li::before { content: ""; display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: var(--accent); margin-right: 8px; vertical-align: middle; }
+
+  .figure { margin: 0; min-width: 0; }
+  .stage { position: relative; background: linear-gradient(180deg, var(--panel), #08080a); border: 1px solid var(--line); border-radius: 18px; padding: 14px; }
+  .stage svg { display: block; width: 100%; height: auto; }
+  .chips { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: 12px; padding: 0; list-style: none; }
+  .chip { font-family: var(--mono); font-size: 11px; line-height: 1.3; color: var(--grey-2); border: 1px solid var(--line); border-radius: 8px; padding: 7px 8px; min-width: 0; overflow-wrap: anywhere; }
+  .chip b { display: block; color: var(--grey); font-weight: 600; }
+  .chip.on { color: var(--fg); border-color: var(--line-2); background: var(--panel-2); }
+  .chip.on b { color: var(--accent); }
+  .figure figcaption { font-size: 13px; color: var(--grey-2); margin-top: 10px; }
+  @media (max-width: 520px) { .chip { font-size: 10px; padding: 6px; } .chip span { display: none; } }
+
+  /* SVG graph */
+  .g-edge { fill: none; stroke: var(--line-2); stroke-width: 1.5; }
+  .g-edge.hot { stroke: var(--grey); }
+  .g-dot { fill: var(--panel-2); stroke: var(--line-2); stroke-width: 1.5; }
+  .g-node[data-s="hit"] .g-dot { fill: var(--fg); stroke: var(--fg); }
+  .g-node[data-s="near"] .g-dot { fill: var(--grey); stroke: var(--grey); }
+  .g-node[data-s="dim"] { opacity: .38; }
+  .g-halo { fill: none; stroke: var(--grey-3); stroke-width: 1; opacity: .6; }
+  .g-lbl { font-family: var(--mono); font-size: 13px; fill: var(--grey); }
+  .g-node[data-s="hit"] .g-lbl { fill: var(--fg); }
+  .g-rank circle { fill: var(--accent); }
+  .g-rank text { font-family: var(--mono); font-size: 12px; font-weight: 700; fill: #050505; text-anchor: middle; dominant-baseline: central; }
+  .g-q { font-family: var(--mono); font-size: 13px; fill: var(--fg); }
+  .g-qk { font-family: var(--mono); font-size: 13px; fill: var(--accent); }
+  .g-pulse { fill: var(--accent); }
+  @media (max-width: 600px) { .g-lbl, .g-q, .g-qk { font-size: 19px; } .g-rank text { font-size: 15px; } }
+
+  /* Kinetic band */
+  .band { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); overflow: hidden; padding: 22px 0; }
+  .band-track { display: flex; gap: 48px; white-space: nowrap; font-family: var(--mono); font-size: clamp(22px, 4vw, 44px); color: var(--grey-3); will-change: transform; width: max-content; }
+  .band-track span b { color: var(--fg); font-weight: 500; }
+  .band-track i { color: var(--accent); font-style: normal; }
+
+  /* Design / counters */
+  .grid-3 { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; margin-top: 48px; }
+  @media (min-width: 760px) { .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 24px; min-width: 0; }
+  .card p { color: var(--grey); margin: 10px 0 0; font-size: 15.5px; }
+  .card .k { font-family: var(--mono); font-size: 12px; color: var(--accent); letter-spacing: .1em; }
+  .counters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; margin-top: 56px; background: var(--line); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+  @media (min-width: 760px) { .counters { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+  .counter { background: var(--bg); padding: 26px 20px; min-width: 0; }
+  .counter .n { font-size: clamp(38px, 5vw, 56px); font-weight: 650; letter-spacing: -.04em; line-height: 1; font-variant-numeric: tabular-nums; }
+  .counter .l { margin-top: 10px; color: var(--grey); font-size: 14px; }
+  .counter:last-child { grid-column: 1 / -1; }
+  @media (min-width: 760px) { .counter:last-child { grid-column: auto; } }
+
+  /* Pipeline scene */
+  .pipe-static .pipe-sticky { padding: 0; }
+  .pipe-sticky { display: flex; flex-direction: column; justify-content: center; }
+  .motion-ready .pipe-scene { height: 340vh; }
+  .motion-ready .pipe-sticky { position: sticky; top: 60px; height: calc(100vh - 60px); height: calc(100svh - 60px); }
+  .pipe-svg { width: 100%; height: auto; margin-top: 36px; overflow: visible; }
+  .p-track { fill: none; stroke: var(--line); stroke-width: 2; }
+  .p-draw { fill: none; stroke: var(--fg); stroke-width: 2; }
+  .p-st { fill: var(--bg); stroke: var(--line-2); stroke-width: 2; }
+  .p-st.on { stroke: var(--fg); fill: var(--fg); }
+  .p-num { font-family: var(--mono); font-size: 14px; fill: var(--grey-2); text-anchor: middle; }
+  .p-name { font-family: var(--mono); font-size: 15px; fill: var(--grey); }
+  .p-name.on { fill: var(--fg); }
+  @media (max-width: 600px) { .p-name { font-size: 34px; } .p-num { font-size: 28px; } .p-st { stroke-width: 3; } }
+  .steps { list-style: none; padding: 0; margin: 28px 0 0; display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); }
+  @media (min-width: 760px) { .steps { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  .step { border: 1px solid var(--line); border-radius: 14px; padding: 18px; background: var(--panel); min-width: 0; }
+  .step .sn { font-family: var(--mono); font-size: 12px; color: var(--accent); }
+  .step h3 { font-family: var(--mono); font-size: 15px; margin-top: 6px; overflow-wrap: anywhere; }
+  .step p { color: var(--grey); font-size: 14.5px; margin: 8px 0 0; }
+  .motion-ready .steps { position: relative; display: block; min-height: 236px; max-width: 620px; }
+  .motion-ready .step { position: absolute; inset: 0 auto auto 0; width: 100%; opacity: 0; }
+  .pipe-note { color: var(--grey-2); font-size: 14px; margin-top: 18px; }
+  .motion-ready .pipe-note { margin-top: 24px; }
+
+  /* Tools */
+  .tools { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; margin-top: 48px; }
+  @media (min-width: 760px) { .tools { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .tool { position: relative; overflow: hidden; }
+  .tool h3 { font-family: var(--mono); font-size: 18px; overflow-wrap: anywhere; }
+  .tool .sig { font-family: var(--mono); font-size: 12.5px; color: var(--grey-2); margin-top: 6px; overflow-wrap: anywhere; }
+  .tool .bar { position: absolute; left: 0; top: 0; height: 2px; width: 100%; background: var(--accent); transform-origin: 0 50%; transform: scaleX(.08); }
+
+  /* Benchmark */
+  .bench-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; margin-top: 48px; }
+  @media (min-width: 980px) { .bench-grid { grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); } }
+  .panel-t { font-size: 15px; font-weight: 600; margin: 0; }
+  .panel-s { font-size: 13px; color: var(--grey-2); margin: 4px 0 0; }
+  .bars { list-style: none; padding: 0; margin: 22px 0 0; display: grid; gap: 16px; }
+  .bar-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; align-items: baseline; }
+  .bar-row .nm { font-family: var(--mono); font-size: 13.5px; color: var(--grey); }
+  .bar-row .val { font-family: var(--mono); font-size: 14px; font-variant-numeric: tabular-nums; }
+  .bar-row.us .nm { color: var(--fg); }
+  .bar-row.us .val { color: var(--accent-2); }
+  .track { grid-column: 1 / -1; height: 10px; background: var(--panel-2); border-radius: 3px; position: relative; overflow: hidden; }
+  .fill { position: absolute; inset: 0 auto 0 0; background: var(--line-2); border-radius: 3px; transform-origin: 0 50%; }
+  .bar-row.base .fill { background: var(--grey-2); }
+  .bar-row.us .fill { background: var(--fg); }
+  .axis { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 11px; color: var(--grey-2); margin-top: 8px; }
+  .diff-svg { width: 100%; height: auto; display: block; margin-top: 16px; }
+  .d-zero { stroke: var(--fg); stroke-width: 1; stroke-dasharray: 3 4; }
+  .d-grid { stroke: var(--line); stroke-width: 1; }
+  .d-ci { stroke: var(--grey); stroke-width: 2; stroke-linecap: round; }
+  .d-ci.us { stroke: var(--fg); }
+  .d-pt { fill: var(--grey); }
+  .d-pt.us { fill: var(--accent); }
+  .d-lbl { font-family: var(--mono); font-size: 17px; fill: var(--grey); }
+  .d-lbl.us { fill: var(--fg); }
+  .d-val { font-family: var(--mono); font-size: 15px; fill: var(--grey-2); text-anchor: end; }
+  .d-tick { font-family: var(--mono); font-size: 14px; fill: var(--grey-2); text-anchor: middle; }
+  @media (max-width: 600px) { .d-lbl { font-size: 22px; } .d-val { font-size: 19px; } .d-tick { font-size: 19px; } }
+  .stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 16px; }
+  @media (max-width: 520px) { .stats { grid-template-columns: minmax(0, 1fr); } }
+  .stat .big { font-size: clamp(30px, 4vw, 42px); font-weight: 650; letter-spacing: -.03em; line-height: 1.05; font-variant-numeric: tabular-nums; margin-top: 10px; }
+  .stat .big small { font-size: .5em; color: var(--grey-2); font-weight: 500; letter-spacing: 0; }
+  .stat p { font-size: 14px; }
+  .verdict { margin-top: 16px; border-left: 2px solid var(--accent); padding: 4px 0 4px 18px; color: var(--grey); max-width: 75ch; }
+  .verdict strong { color: var(--fg); }
+  .bench-links { margin-top: 22px; display: flex; flex-wrap: wrap; gap: 12px; }
+
+  /* Install */
+  .install-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 32px; margin-top: 48px; align-items: start; }
+  @media (min-width: 980px) { .install-grid { grid-template-columns: minmax(0, 1.25fr) minmax(0, .75fr); } }
+  .term { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; min-width: 0; }
+  .term-bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--line); background: #0a0a0b; }
+  .dots { display: flex; gap: 6px; }
+  .dots i { width: 10px; height: 10px; border-radius: 50%; background: var(--line-2); display: block; }
+  .term-bar .t { font-family: var(--mono); font-size: 12px; color: var(--grey-2); }
+  .copy { font-family: var(--mono); font-size: 12px; color: var(--grey); background: transparent; border: 1px solid var(--line-2); border-radius: 6px; padding: 4px 10px; cursor: pointer; min-height: 30px; }
+  .copy:hover { color: var(--fg); }
+  .term pre { margin: 0; padding: 20px; overflow-x: auto; font-size: 14px; line-height: 1.9; }
+  .term pre .p { color: var(--accent); user-select: none; }
+  .term pre .c { color: var(--grey-2); }
+  .term .line { display: block; white-space: pre; }
+  .note { font-size: 13.5px; color: var(--grey); border: 1px dashed var(--line-2); border-radius: 10px; padding: 10px 14px; margin-top: 14px; }
+  .note b { color: var(--accent-2); font-weight: 600; }
+  .plats { list-style: none; padding: 0; margin: 14px 0 0; display: flex; flex-wrap: wrap; gap: 8px; }
+  .plats li { font-family: var(--mono); font-size: 12.5px; border: 1px solid var(--line-2); border-radius: 999px; padding: 5px 12px; color: var(--grey); }
+  .ver { font-family: var(--mono); color: var(--accent); }
+  .side h3 { font-size: 17px; }
+  .side ol { padding-left: 1.2em; color: var(--grey); margin: 12px 0 0; }
+  .side ol li { margin: 8px 0; }
+
+  /* Footer */
+  footer { border-top: 1px solid var(--line); padding: 40px 0 56px; color: var(--grey-2); font-size: 14px; }
+  footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 20px; align-items: center; }
+  footer .brand { color: var(--fg); }
+  footer ul { list-style: none; display: flex; flex-wrap: wrap; gap: 8px 22px; margin: 0; padding: 0; }
+  footer a { color: var(--grey); }
+
+  /* Start states, only while motion is running */
+  .motion-ready [data-reveal] { opacity: 0; }
+  .motion-ready .hero h1 .ch, .motion-ready .split .clip > span { transform: translateY(110%); }
+  .motion-ready .fill { transform: scaleX(0); }
+  .motion-ready [data-kinetic]:not(.split-done), .motion-ready h2.split:not(.split-done) { opacity: 0; }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="top" id="top">
+  <div class="wrap">
+    <a class="brand" href="#main" aria-label="GraphRelay, back to top">
+      <img src="assets/logo.png" alt="" width="26" height="26">
+      <span>GraphRelay</span>
+    </a>
+    <nav class="nav" aria-label="Sections">
+      <a href="#pipeline" class="opt">How it works</a>
+      <a href="#tools" class="opt">Tools</a>
+      <a href="#benchmark">Benchmark</a>
+      <a href="#install">Install</a>
+      <a href="https://github.com/openwt-vn/graphrelay">GitHub</a>
+    </nav>
+  </div>
+  <div class="progress" aria-hidden="true"></div>
+</header>
+
+<main id="main">
+  <!-- HERO -->
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="hero-bg" aria-hidden="true">
+      <div class="hero-grid" data-parallax="0.35"></div>
+      <div class="hero-ring" data-parallax="0.2"></div>
+      <div class="hero-ring r2" data-parallax="0.5"></div>
+    </div>
+    <div class="wrap">
+      <div>
+        <p class="eyebrow" data-reveal><b>gr</b> local code graph for coding agents</p>
+        <h1 id="hero-title" data-kinetic aria-label="Code search that follows the call graph.">Code search that follows the call graph<span class="accent-dot">.</span></h1>
+        <p class="lead" data-reveal>GraphRelay indexes a repository into a symbol and call graph, then lets a coding agent ask for relevant code, a symbol's callers and callees, and the blast radius of a change. One Rust binary. Your code stays on your machine.</p>
+        <div class="cta" data-reveal>
+          <a class="btn primary" href="#install">Install <span class="arr" aria-hidden="true">&rarr;</span></a>
+          <a class="btn" href="#benchmark">See the benchmark</a>
+        </div>
+        <ul class="facts-line" data-reveal>
+          <li>no cloud</li><li>no API key</li><li>no embedding model</li>
+        </ul>
+      </div>
+
+      <figure class="figure" data-reveal>
+        <div class="stage">
+          <svg id="hero-graph" viewBox="0 0 640 445" role="img" aria-labelledby="hg-title hg-desc">
+            <title id="hg-title">Illustration of a query moving through GraphRelay's retrieval pipeline</title>
+            <desc id="hg-desc">A small call graph of eleven symbols. A query matches two symbols by lexical search, the search expands one hop to their direct callers and callees, personalized PageRank scores the reached nodes, and a rerank step marks the top three results.</desc>
+            <g id="hg-edges"></g>
+            <g id="hg-nodes"></g>
+            <g id="hg-fx"></g>
+            <text class="g-q" x="20" y="30"><tspan class="g-qk">query&gt; </tspan><tspan id="hg-query">where are invoice totals validated?</tspan></text>
+          </svg>
+          <ol class="chips" id="hg-chips" aria-hidden="true">
+            <li class="chip on" data-i="0"><b>01</b>lexical<span> · BM25</span></li>
+            <li class="chip on" data-i="1"><b>02</b>expand<span> · 1 hop</span></li>
+            <li class="chip on" data-i="2"><b>03</b>PageRank<span> · personalized</span></li>
+            <li class="chip on" data-i="3"><b>04</b>rerank<span> · ranked</span></li>
+          </ol>
+        </div>
+        <figcaption>Illustration of the pipeline; the symbol names are invented.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <div class="band" aria-hidden="true">
+    <div class="band-track" id="band">
+      <span><b>search_code</b></span><i>/</i><span><b>inspect</b></span><i>/</i><span><b>trace_impact</b></span><i>/</i><span><b>watch_status</b></span><i>/</i>
+      <span>FTS5 + BM25</span><i>/</i><span>graph expansion</span><i>/</i><span>personalized PageRank</span><i>/</i><span>rerank</span><i>/</i>
+      <span><b>search_code</b></span><i>/</i><span><b>inspect</b></span><i>/</i><span><b>trace_impact</b></span><i>/</i><span><b>watch_status</b></span><i>/</i>
+    </div>
+  </div>
+
+  <!-- DESIGN -->
+  <section class="sec" id="design" aria-labelledby="design-title">
+    <div class="wrap">
+      <p class="eyebrow" data-reveal><b>01</b> The design</p>
+      <h2 id="design-title" class="split">Local, private, and built on a call graph.</h2>
+      <p class="lead" data-reveal>A single binary watches your repository, parses it with tree-sitter, and keeps a symbol and call graph in SQLite. Agents reach it over MCP; you can browse the same graph in the web UI.</p>
+
+      <div class="grid-3" data-stagger>
+        <article class="card" data-reveal>
+          <div class="k">LOCAL</div>
+          <h3 style="margin-top:10px">Your code stays on your machine</h3>
+          <p>No cloud account, no API key, no embedding model to download. Every retrieval stage is a local SQLite query or an in-memory graph walk.</p>
+        </article>
+        <article class="card" data-reveal>
+          <div class="k">ONE PORT</div>
+          <h3 style="margin-top:10px">MCP, REST and a web UI on :3030</h3>
+          <p>One Rust binary, <code>gr</code>. No Python, no Node, no database server. The web UI shows an interactive call graph and an inspector for any symbol.</p>
+        </article>
+        <article class="card" data-reveal>
+          <div class="k">CALL GRAPH</div>
+          <h3 style="margin-top:10px">Callers, callees, blast radius</h3>
+          <p>Ask for relevant code, for the callers and callees of a symbol, or for what a change would reach. The graph is built from the code itself, with no model in between.</p>
+        </article>
+      </div>
+
+      <div class="counters" role="list">
+        <div class="counter" role="listitem"><div class="n" data-count="1">1</div><div class="l">binary, <code>gr</code></div></div>
+        <div class="counter" role="listitem"><div class="n" data-count="3030" data-plain>3030</div><div class="l">the one port</div></div>
+        <div class="counter" role="listitem"><div class="n" data-count="4">4</div><div class="l">MCP tools</div></div>
+        <div class="counter" role="listitem"><div class="n" data-count="31">31</div><div class="l">languages via tree-sitter</div></div>
+        <div class="counter" role="listitem"><div class="n" data-count="0">0</div><div class="l">API keys or cloud calls</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PIPELINE (scroll-linked) -->
+  <section class="sec" id="pipeline" aria-labelledby="pipe-title">
+    <div class="pipe-scene" id="pipe-scene">
+      <div class="pipe-sticky">
+        <div class="wrap">
+          <p class="eyebrow" data-reveal><b>02</b> How retrieval works</p>
+          <h2 id="pipe-title" class="split">Four stages, one ranked list.</h2>
+          <svg class="pipe-svg" id="pipe-svg" viewBox="0 0 1000 120" aria-hidden="true">
+            <path class="p-track" d="M60 60 C 160 10, 253 110, 353 60 S 547 10, 647 60 S 840 110, 940 60"/>
+            <path class="p-draw" id="pipe-draw" d="M60 60 C 160 10, 253 110, 353 60 S 547 10, 647 60 S 840 110, 940 60"/>
+            <g id="pipe-stations"></g>
+          </svg>
+          <ol class="steps" id="steps">
+            <li class="step active">
+              <div class="sn">01</div>
+              <h3>lexical_search</h3>
+              <p>SQLite FTS5 with BM25 finds the top candidate symbols, with camelCase/snake_case decomposition, stemming and synonym expansion.</p>
+            </li>
+            <li class="step">
+              <div class="sn">02</div>
+              <h3>expand_graph</h3>
+              <p>Adds the callers and callees of those hits, one hop out, with a decayed score.</p>
+            </li>
+            <li class="step">
+              <div class="sn">03</div>
+              <h3>personalized_pagerank</h3>
+              <p>A query-seeded PageRank over the graph gives each candidate a centrality score.</p>
+            </li>
+            <li class="step">
+              <div class="sn">04</div>
+              <h3>rerank</h3>
+              <p>Graph score and BM25 are combined into a single ranked list, with the source snippet attached.</p>
+            </li>
+          </ol>
+          <p class="pipe-note">No embedding model, no vector index, no cloud call. The tradeoff: a query needs real vocabulary overlap with the code to find it.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOOLS -->
+  <section class="sec" id="tools" aria-labelledby="tools-title">
+    <div class="wrap">
+      <p class="eyebrow" data-reveal><b>03</b> MCP tools</p>
+      <h2 id="tools-title" class="split">Exactly four tools.</h2>
+      <p class="lead" data-reveal>A small surface on purpose. Any MCP client can call them at <code>POST http://localhost:3030/{project}/mcp</code>.</p>
+      <div class="tools">
+        <article class="card tool" data-reveal>
+          <div class="bar" aria-hidden="true"></div>
+          <h3>search_code</h3>
+          <div class="sig">(intent? | implements?, top_n?)</div>
+          <p>Fused lexical and graph retrieval. Pass <code>intent</code> for a natural-language search, or <code>implements</code> to find everything implementing a named interface, trait or base class.</p>
+        </article>
+        <article class="card tool" data-reveal>
+          <div class="bar" aria-hidden="true"></div>
+          <h3>inspect</h3>
+          <div class="sig">(symbol? | path?, include_source?)</div>
+          <p>A symbol's definition, callers, callees and docstring; or, for a path, the file's context or a module summary.</p>
+        </article>
+        <article class="card tool" data-reveal>
+          <div class="bar" aria-hidden="true"></div>
+          <h3>trace_impact</h3>
+          <div class="sig">(symbol, depth?)</div>
+          <p>The blast radius of a change: what breaks if this symbol changes, from the callers in the call graph.</p>
+        </article>
+        <article class="card tool" data-reveal>
+          <div class="bar" aria-hidden="true"></div>
+          <h3>watch_status</h3>
+          <div class="sig">()</div>
+          <p>Index freshness, so an agent can tell when results may be stale.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- BENCHMARK -->
+  <section class="sec" id="benchmark" aria-labelledby="bench-title">
+    <div class="wrap">
+      <p class="eyebrow" data-reveal><b>04</b> Honest status</p>
+      <h2 id="bench-title" class="split">We measure. Here is what we found.</h2>
+      <p class="lead" data-reveal>Our own agent benchmark: Claude Sonnet 5.5 answers 30 hard questions about ERPNext, 3 repeats per arm, and a blind judge scores key-fact coverage. The control is the same agent with only Grep, Read and Glob.</p>
+      <p class="verdict" data-reveal><strong>Result: no reliable advantage over the Grep/Read/Glob baseline.</strong> GraphRelay scored 71.2% against 70.6%, a difference of +0.6 points whose 95% interval runs from &minus;4.0 to +5.0.</p>
+
+      <div class="bench-grid">
+        <div class="card" data-reveal>
+          <p class="panel-t">Mean key-fact coverage</p>
+          <p class="panel-s">Sonnet 5.5, 30 questions &times; 3 repeats. Full 0&ndash;100 scale.</p>
+          <ul class="bars" id="bars">
+            <li class="bar-row base"><span class="nm">baseline (Grep/Read/Glob)</span><span class="val" data-count="70.6" data-dec="1" data-suffix="%">70.6%</span><div class="track" aria-hidden="true"><div class="fill" style="width:70.6%"></div></div></li>
+            <li class="bar-row us"><span class="nm">GraphRelay</span><span class="val" data-count="71.2" data-dec="1" data-suffix="%">71.2%</span><div class="track" aria-hidden="true"><div class="fill" style="width:71.2%"></div></div></li>
+            <li class="bar-row"><span class="nm">graphify</span><span class="val" data-count="66.9" data-dec="1" data-suffix="%">66.9%</span><div class="track" aria-hidden="true"><div class="fill" style="width:66.9%"></div></div></li>
+            <li class="bar-row"><span class="nm">codegraph-colby</span><span class="val" data-count="67.1" data-dec="1" data-suffix="%">67.1%</span><div class="track" aria-hidden="true"><div class="fill" style="width:67.1%"></div></div></li>
+          </ul>
+          <div class="axis" aria-hidden="true"><span>0</span><span>25</span><span>50</span><span>75</span><span>100%</span></div>
+        </div>
+
+        <div class="card" data-reveal>
+          <p class="panel-t">Difference from baseline, with 95% interval</p>
+          <p class="panel-s">Percentage points. Every interval crosses zero.</p>
+          <svg class="diff-svg" id="diff" viewBox="0 0 640 250" role="img" aria-label="GraphRelay plus 0.6 points, interval minus 4.0 to plus 5.0. graphify minus 3.7, interval minus 8.6 to plus 0.7. codegraph-colby minus 3.5, interval minus 8.5 to plus 1.3. All intervals include zero.">
+          </svg>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="card stat" data-reveal>
+          <div class="k mono" style="font-size:12px;color:var(--grey-2);letter-spacing:.1em">TOOL CALLS PER QUESTION</div>
+          <div class="big"><span data-count="4.0" data-dec="1">4.0</span> <small>vs <span data-count="5.6" data-dec="1">5.6</span> baseline</small></div>
+          <p style="color:var(--grey);margin:8px 0 0">About 30% fewer tool calls.</p>
+        </div>
+        <div class="card stat" data-reveal>
+          <div class="k mono" style="font-size:12px;color:var(--grey-2);letter-spacing:.1em">COST PER QUESTION</div>
+          <div class="big">$<span data-count="0.099" data-dec="3">0.099</span> <small>vs $<span data-count="0.076" data-dec="3">0.076</span> baseline</small></div>
+          <p style="color:var(--grey);margin:8px 0 0">About 30% more per question: tool results add input tokens.</p>
+        </div>
+      </div>
+
+      <p class="verdict" data-reveal>With Claude Haiku 5.5 on the same 30 questions (3 repeats) the baseline was ahead: <strong>69.8%</strong> against <strong>66.8%</strong> for GraphRelay. The project is early; we publish these numbers so you can judge for yourself.</p>
+      <div class="bench-links" data-reveal>
+        <a class="btn" href="https://github.com/openwt-vn/graphrelay/blob/main/docs/benchmarks.md">Method, caveats and raw data <span class="arr" aria-hidden="true">&rarr;</span></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- INSTALL -->
+  <section class="sec" id="install" aria-labelledby="install-title">
+    <div class="wrap">
+      <p class="eyebrow" data-reveal><b>05</b> Install</p>
+      <h2 id="install-title" class="split">One installer, then three commands.</h2>
+      <div class="install-grid">
+        <div data-reveal style="min-width:0">
+          <div class="term">
+            <div class="term-bar">
+              <div class="dots" aria-hidden="true"><i></i><i></i><i></i></div>
+              <span class="t">shell</span>
+              <button class="copy" type="button" data-copy="install-cmds">Copy</button>
+            </div>
+<pre id="install-cmds" tabindex="0" aria-label="Install commands"><code style="all:unset"><span class="line"><span class="p">$ </span>curl -fsSL https://raw.githubusercontent.com/openwt-vn/graphrelay/main/scripts/install.sh | sh</span><span class="line"><span class="p">$ </span>cd /path/to/your-project</span><span class="line"><span class="p">$ </span>gr init    <span class="c"># register the project</span></span><span class="line"><span class="p">$ </span>gr start   <span class="c"># start the daemon and index</span></span><span class="line"><span class="p">$ </span>gr setup   <span class="c"># wire up Claude Code, Cursor, OpenCode, Amp or Codex</span></span></code></pre>
+          </div>
+          <p class="note"><b>Repository currently private.</b> The install command only works for people with access to the repository for now.</p>
+        </div>
+        <div class="side" data-reveal>
+          <h3>Release <span class="ver">v0.1.3</span></h3>
+          <ul class="plats">
+            <li>macOS Apple Silicon</li>
+            <li>Linux x86_64</li>
+            <li>Linux arm64</li>
+          </ul>
+          <ol>
+            <li>The installer downloads the archive for your platform, verifies its sha256 checksum and puts <code>gr</code> in <code>~/.local/bin</code>.</li>
+            <li>Then open <code>http://localhost:3030/{project}/</code> for the web UI.</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <a class="brand" href="https://github.com/openwt-vn/graphrelay"><img src="assets/logo.png" alt="" width="22" height="22"><span>GraphRelay</span></a>
+    <ul>
+      <li><a href="https://github.com/openwt-vn/graphrelay">GitHub</a></li>
+      <li><a href="https://github.com/openwt-vn/graphrelay/blob/main/LICENSE">MIT License</a> &copy; OpenWTVN</li>
+      <li>Early project</li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+  // Build the static (final-state) hero graph and pipeline stations without any library, so the page is complete without motion.
+  (function () {
+    var NS = 'http://www.w3.org/2000/svg';
+    var N = {
+      a: [300, 205, 'validate_totals', 'hit', 1],
+      b: [470, 135, 'compute_tax', 'hit', 2],
+      c: [140, 120, 'submit_invoice', 'near'],
+      d: [130, 300, 'on_save', 'near'],
+      e: [430, 300, 'round_amount', 'near', 3],
+      f: [590, 230, 'get_rate', 'near'],
+      g: [330, 85, 'apply_discount', 'near'],
+      h: [50, 215, 'api_create', 'dim'],
+      i: [560, 60, 'cart_view', 'dim'],
+      j: [300, 395, 'format_money', 'dim'],
+      k: [560, 385, 'log_event', 'dim']
+    };
+    var E = [['c','a'],['d','a'],['a','e'],['a','b'],['b','f'],['g','b'],['h','d'],['i','g'],['e','j'],['e','k'],['h','c']];
+    var PR = { a: .95, b: .75, e: .55, c: .45, f: .35, d: .3, g: .28 };
+    window.__HG = { N: N, E: E, PR: PR };
+    function el(tag, attrs, parent) { var x = document.createElementNS(NS, tag); for (var k in attrs) x.setAttribute(k, attrs[k]); if (parent) parent.appendChild(x); return x; }
+    var eg = document.getElementById('hg-edges'), ng = document.getElementById('hg-nodes');
+    E.forEach(function (p) {
+      var A = N[p[0]], B = N[p[1]];
+      var mx = (A[0] + B[0]) / 2, my = (A[1] + B[1]) / 2 - 18;
+      var hot = (N[p[0]][3] === 'hit' || N[p[1]][3] === 'hit');
+      el('path', { d: 'M' + A[0] + ' ' + A[1] + ' Q ' + mx + ' ' + my + ' ' + B[0] + ' ' + B[1], 'class': 'g-edge' + (hot ? ' hot' : ''), 'data-a': p[0], 'data-b': p[1] }, eg);
+    });
+    Object.keys(N).forEach(function (id) {
+      var n = N[id], g = el('g', { 'class': 'g-node', 'data-id': id, 'data-s': n[3] }, ng);
+      el('circle', { 'class': 'g-halo', cx: n[0], cy: n[1], r: PR[id] ? 8 + 20 * PR[id] : 0 }, g);
+      el('circle', { 'class': 'g-dot', cx: n[0], cy: n[1], r: 7 }, g);
+      var anchor = n[0] > 520 ? 'end' : (n[0] < 100 ? 'start' : 'middle');
+      var t = el('text', { 'class': 'g-lbl', x: n[0], y: n[1] + 30, 'text-anchor': anchor }, g);
+      t.textContent = n[2];
+      if (n[4]) {
+        var r = el('g', { 'class': 'g-rank', 'data-rank': n[4] }, g);
+        el('circle', { cx: n[0] + 16, cy: n[1] - 16, r: 10 }, r);
+        var rt = el('text', { x: n[0] + 16, y: n[1] - 16 }, r); rt.textContent = n[4];
+      }
+    });
+    var st = document.getElementById('pipe-stations');
+    var names = ['lexical', 'expand', 'PageRank', 'rerank'], xs = [60, 353, 647, 940];
+    xs.forEach(function (x, i) {
+      el('circle', { 'class': 'p-st on', cx: x, cy: 60, r: 9, 'data-i': i }, st);
+      var t1 = el('text', { 'class': 'p-num', x: x, y: 18 }, st); t1.textContent = '0' + (i + 1);
+      var t2 = el('text', { 'class': 'p-name on', x: x, y: 112, 'data-i': i, 'text-anchor': i === 0 ? 'start' : (i === 3 ? 'end' : 'middle'), dx: i === 0 ? -24 : (i === 3 ? 24 : 0) }, st); t2.textContent = names[i];
+    });
+    // Benchmark difference plot: x(v) maps -10..+10 points onto 180..600.
+    var dsvg = document.getElementById('diff');
+    var X = function (v) { return 390 + v * 21; };
+    [-10, -5, 0, 5, 10].forEach(function (v) {
+      el('line', { 'class': v === 0 ? 'd-zero' : 'd-grid', x1: X(v), x2: X(v), y1: 14, y2: 214 }, dsvg);
+      var t = el('text', { 'class': 'd-tick', x: X(v), y: 240 }, dsvg); t.textContent = (v > 0 ? '+' : '') + v;
+    });
+    var rows = [['GraphRelay', 0.6, -4.0, 5.0, true], ['graphify', -3.7, -8.6, 0.7], ['codegraph-colby', -3.5, -8.5, 1.3]];
+    rows.forEach(function (r, i) {
+      var y = 50 + i * 68, us = !!r[4] ? ' us' : '';
+      var l = el('text', { 'class': 'd-lbl' + us, x: 0, y: y - 18 }, dsvg); l.textContent = r[0];
+      var v = el('text', { 'class': 'd-val', x: 640, y: y - 18 }, dsvg); v.textContent = (r[1] > 0 ? '+' : '') + r[1].toFixed(1) + '  [' + r[2].toFixed(1) + ', ' + (r[3] > 0 ? '+' : '') + r[3].toFixed(1) + ']';
+      el('line', { 'class': 'd-ci' + us, x1: X(r[1]), x2: X(r[2]), y1: y, y2: y, 'data-to': X(r[2]) }, dsvg);
+      el('line', { 'class': 'd-ci' + us, x1: X(r[1]), x2: X(r[3]), y1: y, y2: y, 'data-to': X(r[3]) }, dsvg);
+      el('line', { 'class': 'd-ci' + us, x1: X(r[2]), x2: X(r[2]), y1: y - 7, y2: y + 7, 'data-cap': 1 }, dsvg);
+      el('line', { 'class': 'd-ci' + us, x1: X(r[3]), x2: X(r[3]), y1: y - 7, y2: y + 7, 'data-cap': 1 }, dsvg);
+      el('circle', { 'class': 'd-pt' + us, cx: X(r[1]), cy: y, r: 6 }, dsvg);
+    });
+  })();
+
+  // Copy button works without the animation library.
+  document.querySelectorAll('[data-copy]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var src = document.getElementById(b.getAttribute('data-copy'));
+      var text = Array.prototype.map.call(src.querySelectorAll('.line'), function (l) {
+        return l.textContent.replace(/^\$ /, '').replace(/\s+#.*$/, '');
+      }).join('\n');
+      var done = function () { b.textContent = 'Copied'; setTimeout(function () { b.textContent = 'Copy'; }, 1600); };
+      if (navigator.clipboard) navigator.clipboard.writeText(text).then(done, function () { b.textContent = 'Select and copy'; });
+    });
+  });
+  window.addEventListener('scroll', function () {
+    document.getElementById('top').classList.toggle('scrolled', window.scrollY > 8);
+  }, { passive: true });
+</script>
+
+<script type="module">
+import { animate, scroll, inView, stagger } from 'https://cdn.jsdelivr.net/npm/motion@14.2.0/+esm';
+
+const root = document.documentElement;
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+if (reduce || !root.classList.contains('motion-ready')) {
+  // Static final states already render; nothing to animate.
+} else try {
+  const ease = [0.22, 1, 0.36, 1];
+  const springy = { type: 'spring', stiffness: 260, damping: 22 };
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+
+  /* ---------- kinetic typography ---------- */
+  function splitChars(h) {
+    const label = h.getAttribute('aria-label') || h.textContent.trim();
+    h.removeAttribute('aria-label');
+    const accent = h.querySelector('.accent-dot');
+    const text = h.childNodes[0].textContent;
+    h.textContent = '';
+    const frag = document.createDocumentFragment();
+    text.split(' ').forEach((w, wi, arr) => {
+      const word = document.createElement('span');
+      word.className = 'word';
+      word.setAttribute('aria-hidden', 'true');
+      for (const c of w) {
+        const clip = document.createElement('span'); clip.className = 'clip';
+        const ch = document.createElement('span'); ch.className = 'ch'; ch.textContent = c;
+        clip.appendChild(ch); word.appendChild(clip);
+      }
+      if (wi === arr.length - 1 && accent) {
+        const clip = document.createElement('span'); clip.className = 'clip';
+        accent.classList.add('ch'); accent.setAttribute('aria-hidden', 'true');
+        clip.appendChild(accent); word.appendChild(clip);
+      }
+      frag.appendChild(word);
+      if (wi < arr.length - 1) frag.appendChild(document.createTextNode(' '));
+    });
+    h.appendChild(frag);
+    const sr = document.createElement('span'); sr.className = 'sr-only'; sr.textContent = label; h.appendChild(sr);
+    h.classList.add('split-done');
+    return $$('.ch', h);
+  }
+  function splitWords(h) {
+    const label = h.textContent.trim();
+    h.textContent = '';
+    label.split(' ').forEach((w, i, arr) => {
+      const clip = document.createElement('span'); clip.className = 'clip'; clip.setAttribute('aria-hidden', 'true');
+      const inner = document.createElement('span'); inner.textContent = w;
+      clip.appendChild(inner); h.appendChild(clip);
+      if (i < arr.length - 1) h.appendChild(document.createTextNode(' '));
+    });
+    const sr = document.createElement('span'); sr.className = 'sr-only'; sr.textContent = label; h.appendChild(sr);
+    h.classList.add('split-done');
+    return $$('.clip > span', h);
+  }
+
+  const h1 = $('[data-kinetic]');
+  const chars = splitChars(h1);
+  animate(chars, { y: ['110%', '0%'], rotate: [8, 0] }, { delay: stagger(0.022, { startDelay: 0.15 }), type: 'spring', stiffness: 380, damping: 30 });
+  animate($$('.hero [data-reveal]'), { opacity: [0, 1], y: [18, 0] }, { delay: stagger(0.12, { startDelay: 0.55 }), duration: 0.9, ease });
+  animate($('.hero .arr'), { x: [0, 5, 0] }, { duration: 1.6, repeat: Infinity, ease: 'easeInOut', delay: 2 });
+
+  $$('h2.split').forEach(h => {
+    const words = splitWords(h);
+    inView(h, () => {
+      animate(words, { y: ['110%', '0%'] }, { delay: stagger(0.06), duration: 0.9, ease });
+    }, { amount: 0.6 });
+  });
+
+  /* ---------- generic reveals ---------- */
+  $$('[data-reveal]').filter(el => !el.closest('.hero')).forEach(el => {
+    inView(el, () => {
+      const sib = el.parentElement.hasAttribute('data-stagger') ? Array.from(el.parentElement.children).indexOf(el) * 0.1 : 0;
+      animate(el, { opacity: [0, 1], y: [28, 0] }, { duration: 0.9, delay: sib, ease });
+    }, { amount: 0.25 });
+  });
+
+  /* ---------- counters ---------- */
+  function countUp(el, delay = 0) {
+    const target = parseFloat(el.dataset.count);
+    const dec = parseInt(el.dataset.dec || '0', 10);
+    const suffix = el.dataset.suffix || '';
+    const final = el.textContent;
+    animate(0, target, {
+      duration: target > 100 ? 1.8 : 1.3, delay, ease: [0.16, 1, 0.3, 1],
+      onUpdate: v => { el.textContent = v.toFixed(dec) + suffix; },
+      onComplete: () => { el.textContent = final; }
+    });
+  }
+  $$('.counter .n').forEach((el, i) => inView(el, () => countUp(el, i * 0.08), { amount: 0.8 }));
+  $$('.stat [data-count]').forEach(el => inView(el, () => countUp(el, 0.2), { amount: 0.8 }));
+
+  /* ---------- header progress + parallax + kinetic band ---------- */
+  scroll(animate('.progress', { transform: ['scaleX(0)', 'scaleX(1)'] }, { ease: 'linear' }));
+  const hero = $('.hero');
+  $$('[data-parallax]').forEach(layer => {
+    const k = parseFloat(layer.dataset.parallax);
+    scroll(animate(layer, { y: [0, 260 * k] }, { ease: 'linear' }), { target: hero, offset: ['start start', 'end start'] });
+  });
+  scroll(animate('#band', { x: ['0%', '-38%'] }, { ease: 'linear' }), { target: $('.band'), offset: ['start end', 'end start'] });
+
+  /* ---------- tools: accent bars sweep in ---------- */
+  $$('.tool').forEach((t, i) => inView(t, () => {
+    animate($('.bar', t), { transform: ['scaleX(0)', 'scaleX(1)', 'scaleX(0.08)'] }, { duration: 1.4, delay: 0.2 + i * 0.08, times: [0, 0.55, 1], ease: 'easeInOut' });
+  }, { amount: 0.5 }));
+
+  /* ---------- benchmark bars + intervals ---------- */
+  inView('#bars', () => {
+    animate($$('#bars .fill'), { transform: ['scaleX(0)', 'scaleX(1)'] }, { delay: stagger(0.12, { startDelay: 0.2 }), duration: 1.3, ease });
+    $$('#bars .val').forEach((v, i) => countUp(v, 0.2 + i * 0.12));
+  }, { amount: 0.4 });
+
+  const diff = $('#diff');
+  const ciLines = $$('line.d-ci:not([data-cap])', diff);
+  const caps = $$('line[data-cap]', diff);
+  const pts = $$('.d-pt', diff);
+  const vals = $$('.d-val', diff);
+  ciLines.forEach(l => l.setAttribute('x2', l.getAttribute('x1')));
+  caps.forEach(c => c.style.opacity = 0);
+  pts.forEach(p => p.setAttribute('r', 0));
+  vals.forEach(v => v.style.opacity = 0);
+  inView(diff, () => {
+    pts.forEach((p, i) => animate(0, 6, { ...springy, delay: 0.2 + i * 0.25, onUpdate: r => p.setAttribute('r', Math.max(0, r)) }));
+    ciLines.forEach((l, i) => {
+      const from = parseFloat(l.getAttribute('x1')), to = parseFloat(l.dataset.to);
+      animate(from, to, { duration: 1.1, delay: 0.45 + Math.floor(i / 2) * 0.25, ease, onUpdate: x => l.setAttribute('x2', x) });
+    });
+    animate(caps, { opacity: [0, 1] }, { delay: stagger(0.12, { startDelay: 1.2 }), duration: 0.4 });
+    animate(vals, { opacity: [0, 1] }, { delay: stagger(0.25, { startDelay: 1.3 }), duration: 0.6 });
+  }, { amount: 0.5 });
+
+  /* ---------- pipeline: scroll-linked scene ---------- */
+  const draw = $('#pipe-draw');
+  const len = draw.getTotalLength();
+  draw.style.strokeDasharray = len;
+  draw.style.strokeDashoffset = len;
+  const stations = $$('#pipe-stations circle');
+  const names = $$('#pipe-stations .p-name');
+  const steps = $$('#steps .step');
+  steps.forEach(s => s.classList.remove('active'));
+  stations.forEach(s => s.classList.remove('on'));
+  names.forEach(s => s.classList.remove('on'));
+  let active = -1;
+  function setStep(i) {
+    if (i === active) return;
+    const prev = steps[active];
+    active = i;
+    if (prev) {
+      animate(prev, { opacity: 0, y: -16 }, { duration: 0.3, ease }).then(() => prev.classList.remove('active'));
+    }
+    const next = steps[i];
+    next.classList.add('active');
+    animate(next, { opacity: [0, 1], y: [24, 0] }, { duration: 0.55, delay: 0.12, ease });
+    stations.forEach((s, j) => {
+      const on = j <= i;
+      if (s.classList.contains('on') !== on) {
+        s.classList.toggle('on', on);
+        names[j].classList.toggle('on', on);
+        if (on) animate(0, 1, { ...springy, onUpdate: v => s.setAttribute('r', 9 + 6 * Math.sin(Math.PI * Math.min(1, Math.max(0, v)))) });
+      }
+    });
+  }
+  setStep(0);
+  scroll((p) => {
+    draw.style.strokeDashoffset = len * (1 - Math.min(1, p * 1.12));
+    setStep(Math.min(3, Math.floor(p * 4.0001)));
+  }, { target: $('#pipe-scene'), offset: ['start start', 'end end'] });
+
+  /* ---------- hero: query moves through the pipeline ---------- */
+  const { N, E, PR } = window.__HG;
+  const svg = $('#hero-graph');
+  const fx = $('#hg-fx');
+  const q = $('#hg-query');
+  const qText = q.textContent;
+  const chipEls = $$('#hg-chips .chip');
+  const nodeEl = id => svg.querySelector(`.g-node[data-id="${id}"]`);
+  const edges = $$('.g-edge', svg).map(p => ({ el: p, a: p.dataset.a, b: p.dataset.b, len: p.getTotalLength() }));
+  const hits = Object.keys(N).filter(k => N[k][3] === 'hit');
+  const near = Object.keys(N).filter(k => N[k][3] === 'near');
+  let heroVisible = true;
+  inView(hero, () => { heroVisible = true; return () => { heroVisible = false; }; }, { amount: 0.15 });
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  const whenVisible = async () => { while (!heroVisible || document.hidden) await wait(300); };
+  const chip = i => chipEls.forEach((c, j) => c.classList.toggle('on', j === i));
+
+  function resetHero() {
+    chipEls.forEach(c => c.classList.remove('on'));
+    q.textContent = '';
+    fx.textContent = '';
+    edges.forEach(e => { e.el.classList.remove('hot'); e.el.style.strokeDasharray = e.len; e.el.style.strokeDashoffset = e.len; });
+    Object.keys(N).forEach(id => {
+      const g = nodeEl(id);
+      g.dataset.s = 'idle';
+      g.style.opacity = 0;
+      $('.g-dot', g).setAttribute('r', 0);
+      $('.g-halo', g).setAttribute('r', 0);
+      const rk = $('.g-rank', g); if (rk) rk.style.opacity = 0;
+    });
+  }
+  function pulse(x1, y1, x2, y2, dur = 0.8, pathEl = null, reverse = false) {
+    const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    c.setAttribute('class', 'g-pulse'); c.setAttribute('r', 4.5); fx.appendChild(c);
+    const L = pathEl ? pathEl.getTotalLength() : 0;
+    return animate(0, 1, {
+      duration: dur, ease: [0.45, 0, 0.2, 1],
+      onUpdate: t => {
+        let x, y;
+        if (pathEl) { const pt = pathEl.getPointAtLength(L * (reverse ? 1 - t : t)); x = pt.x; y = pt.y; }
+        else { x = x1 + (x2 - x1) * t; y = y1 + (y2 - y1) * t; }
+        c.setAttribute('cx', x); c.setAttribute('cy', y);
+      }
+    }).then(() => animate(c, { opacity: [1, 0] }, { duration: 0.35 }).then(() => c.remove()));
+  }
+  function ripple(x, y) {
+    const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    c.setAttribute('cx', x); c.setAttribute('cy', y); c.setAttribute('fill', 'none');
+    c.setAttribute('stroke', '#FF5A1F'); c.setAttribute('stroke-width', 1.5); fx.appendChild(c);
+    animate(8, 36, { duration: 0.9, ease, onUpdate: r => c.setAttribute('r', r) });
+    animate(c, { opacity: [0.9, 0] }, { duration: 0.9, ease }).then(() => c.remove());
+  }
+
+  async function heroLoop() {
+    resetHero();
+    await whenVisible();
+    // 1. symbols appear, edges draw themselves
+    const ids = Object.keys(N);
+    ids.forEach((id, i) => {
+      const g = nodeEl(id);
+      animate(g, { opacity: [0, 1] }, { duration: 0.4, delay: 0.05 * i });
+      animate(0, 7, { ...springy, delay: 0.05 * i, onUpdate: r => $('.g-dot', g).setAttribute('r', Math.max(0, r)) });
+    });
+    await wait(450);
+    edges.forEach((e, i) => animate(e.el, { strokeDashoffset: [e.len, 0] }, { duration: 0.9, delay: 0.07 * i, ease }));
+    await wait(1500);
+
+    // 2. lexical search: query types in, pulses hit the matching symbols
+    chip(0);
+    await animate(0, qText.length, { duration: 1.1, ease: 'linear', onUpdate: v => { q.textContent = qText.slice(0, Math.round(v)); } });
+    await Promise.all(hits.map((id, i) => pulse(86 + i * 120, 36, N[id][0], N[id][1], 0.85)));
+    hits.forEach(id => {
+      const g = nodeEl(id); g.dataset.s = 'hit';
+      ripple(N[id][0], N[id][1]);
+      animate(7, 9, { ...springy, onUpdate: r => $('.g-dot', g).setAttribute('r', r) });
+    });
+    await wait(900);
+
+    // 3. graph expansion: exactly one hop from each hit
+    chip(1);
+    const hop = edges.filter(e => hits.includes(e.a) || hits.includes(e.b));
+    await Promise.all(hop.map((e, i) => {
+      e.el.classList.add('hot');
+      const fromA = hits.includes(e.a);
+      return wait(i * 90).then(() => pulse(0, 0, 0, 0, 0.7, e.el, !fromA));
+    }));
+    near.forEach(id => { nodeEl(id).dataset.s = 'near'; });
+    ids.filter(id => N[id][3] === 'dim').forEach(id => animate(nodeEl(id), { opacity: 0.38 }, { duration: 0.6 }));
+    await wait(900);
+
+    // 4. personalized PageRank: halos grow with each reached node's score
+    chip(2);
+    Object.keys(PR).forEach((id, i) => {
+      const halo = $('.g-halo', nodeEl(id));
+      animate(0, 8 + 20 * PR[id], { type: 'spring', stiffness: 120, damping: 14, delay: i * 0.08, onUpdate: r => halo.setAttribute('r', Math.max(0, r)) });
+    });
+    await wait(1700);
+
+    // 5. rerank: the top three get their rank
+    chip(3);
+    ['a', 'b', 'e'].forEach((id, i) => {
+      const rk = $('.g-rank', nodeEl(id));
+      animate(rk, { opacity: [0, 1] }, { duration: 0.3, delay: 0.25 * i });
+    });
+    Object.keys(N).filter(id => !['a', 'b', 'e'].includes(id) && N[id][3] !== 'dim').forEach(id => animate(nodeEl(id), { opacity: 0.6 }, { duration: 0.8, delay: 0.6 }));
+    await wait(4200);
+
+    // fade out and loop
+    await animate($$('.g-node, .g-edge, #hg-query', svg), { opacity: 0 }, { duration: 0.7, ease }).then(() => {});
+    $$('.g-edge, #hg-query', svg).forEach(x => { x.style.opacity = ''; });
+    await wait(300);
+    heroLoop();
+  }
+  window.__motionOK = true;
+  heroLoop();
+} catch (e) {
+  root.classList.remove('motion-ready');
+  console.error(e);
+}
+</script>
+</body>
+</html>

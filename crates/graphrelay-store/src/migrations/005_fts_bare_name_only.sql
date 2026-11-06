@@ -1,0 +1,17 @@
+-- Follow-up content-format bump to 004_fts_name_tokens, not a schema change.
+-- 004 decomposed the *whole* qualified name (including the relative file
+-- path) with `tokenize_name` — measurably wrong: a real repo's file paths are
+-- dominated by a handful of camelCase-ish prefixes (e.g. `LexicalEditor.ts`,
+-- `LexicalSelection.ts`, `LexicalUtils.ts`), so decomposing them flooded
+-- nearly every symbol's indexed row with generic tokens ("lexical", "editor",
+-- "selection", …), saturating bm25() with false positives and burying the one
+-- genuinely relevant hit around rank 18 instead of top-5 — confirmed by
+-- directly querying `find_relevant_code` against a live server, not just
+-- inferred. `GraphDb::upsert_fts_batch` now decomposes only the bare
+-- identifier (the part after the qualified name's one and only `::`).
+--
+-- Same reasoning as 004: clear stale rows built with the old (over-broad)
+-- decomposition rather than leave two content generations mixed together;
+-- the startup backfill (`fts_backfill_needed`, re-triggered for this
+-- migration too) repopulates every row with the corrected text.
+DELETE FROM chunk_fts;

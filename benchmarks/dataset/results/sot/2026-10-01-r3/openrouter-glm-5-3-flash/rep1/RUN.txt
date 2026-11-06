@@ -1,0 +1,5 @@
+codegraph: release build of a83f516
+erpnext pin: 1887825ce5c6fe2fbd5366ab52e4c73de24d23fa
+questions: Q01,Q06,Q11,Q16,Q21,Q26
+model: openrouter-glm-5-3-flash
+arms: codegraph baseline graphify codegraph-colby

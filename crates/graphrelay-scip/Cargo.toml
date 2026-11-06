@@ -1,0 +1,24 @@
+[package]
+name        = "graphrelay-scip"
+version.workspace    = true
+edition.workspace    = true
+rust-version.workspace = true
+license.workspace    = true
+
+[features]
+default = []
+# Enable SCIP semantic indexing (adds protobuf dependency ~1 MB to binary)
+scip = ["dep:scip", "dep:protobuf"]
+
+[dependencies]
+graphrelay-core  = { path = "../graphrelay-core" }
+graphrelay-store = { path = "../graphrelay-store" }
+anyhow.workspace    = true
+tracing.workspace   = true
+serde.workspace     = true
+# SCIP protobuf — only pulled in with `--features scip`
+scip      = { version = "0.8.1",                              optional = true }
+protobuf  = { version = "3",     features = ["with-bytes"],   optional = true }
+
+[dev-dependencies]
+tempfile.workspace = true

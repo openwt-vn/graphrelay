@@ -1,0 +1,12 @@
+-- Content-format bump, not a schema change: Plan 21 item 13 — `split_words`
+-- (shared by `tokenize_name`/`tokenize_query`) gained two new boundary rules
+-- (an uppercase-run-then-lowercase acronym boundary, and a digit-to-uppercase
+-- boundary) so identifiers like `isSSOAuthentication` and
+-- `sha256UrlEncodedHash` decompose into their real component words instead
+-- of gluing an acronym or digit run onto whatever follows it into one
+-- unrecognizable stemmed blob. Both are real benchmark targets.
+--
+-- Existing rows only have the old decomposition — clear them and let the
+-- startup backfill (`fts_backfill_needed`, re-triggered for this migration
+-- too) repopulate with the new tokenization.
+DELETE FROM chunk_fts;

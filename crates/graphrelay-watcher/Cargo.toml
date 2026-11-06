@@ -1,0 +1,28 @@
+[package]
+name    = "graphrelay-watcher"
+license.workspace = true
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+graphrelay-core    = { path = "../graphrelay-core" }
+graphrelay-parser  = { path = "../graphrelay-parser" }
+graphrelay-store   = { path = "../graphrelay-store" }
+graphrelay-scip    = { path = "../graphrelay-scip", features = ["scip"] }
+notify.workspace            = true
+crossbeam-channel.workspace = true
+tokio.workspace             = true
+tracing.workspace           = true
+anyhow.workspace            = true
+dashmap.workspace           = true
+walkdir.workspace           = true
+xxhash-rust.workspace       = true
+rayon.workspace             = true
+sysinfo.workspace           = true
+serde.workspace             = true
+chrono.workspace            = true
+which.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+tracing-subscriber.workspace = true

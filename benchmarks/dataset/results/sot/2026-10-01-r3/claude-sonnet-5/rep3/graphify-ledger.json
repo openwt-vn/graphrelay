@@ -1,0 +1,77 @@
+{
+  "arm": "graphify",
+  "provider": "claude-sonnet-5",
+  "model": "claude-sonnet-5",
+  "base_url": null,
+  "pricing": {
+    "in": 3.0,
+    "out": 15.0,
+    "cache_read": 0.3,
+    "cache_write": 3.75
+  },
+  "max_turns": 30,
+  "runs": [
+    {
+      "task_id": "Q01",
+      "cost_usd": 0.3483,
+      "tokens": {
+        "input": 26,
+        "output": 7815,
+        "cache_read": 320040,
+        "cache_write": 35998
+      }
+    },
+    {
+      "task_id": "Q06",
+      "cost_usd": 0.1848,
+      "tokens": {
+        "input": 14,
+        "output": 6241,
+        "cache_read": 79734,
+        "cache_write": 17918
+      }
+    },
+    {
+      "task_id": "Q11",
+      "cost_usd": 0.1323,
+      "tokens": {
+        "input": 12,
+        "output": 2793,
+        "cache_read": 75411,
+        "cache_write": 18056
+      }
+    },
+    {
+      "task_id": "Q16",
+      "cost_usd": 0.0484,
+      "tokens": {
+        "input": 10,
+        "output": 1641,
+        "cache_read": 36878,
+        "cache_write": 3389
+      }
+    },
+    {
+      "task_id": "Q21",
+      "cost_usd": 0.3454,
+      "tokens": {
+        "input": 32,
+        "output": 7168,
+        "cache_read": 381163,
+        "cache_write": 32903
+      }
+    },
+    {
+      "task_id": "Q26",
+      "cost_usd": 0.2932,
+      "tokens": {
+        "input": 28,
+        "output": 9457,
+        "cache_read": 235556,
+        "cache_write": 21504
+      }
+    }
+  ],
+  "total_cost_usd": 1.3524,
+  "total_tokens": 1293787
+}

@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      # A full debug `build` + `test` of this workspace (30 tree-sitter grammars, many
+      # test binaries) produces several GB of output. An earlier, heavier dependency set
+      # hit "No space left on device" on the default runner, so free up preinstalled
+      # toolchains/images this job doesn't need. Re-evaluate whether this step is still
+      # needed now that LanceDB/Arrow are gone.
+      - name: Free disk space
+        uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be # v1.3.1
+        with:
+          tool-cache: false
+          docker-images: true
+          large-packages: true
+          swap-storage: true
+
+      - name: Install Rust toolchain
+        # Pinned rather than floating @stable — CI hit a newer stable (1.97.1) whose
+        # rust-lld crashed (SIGBUS) linking graphrelay-store's integration test binary.
+        # Pin to the last locally-verified-good version until re-validated.
+        uses: dtolnay/rust-toolchain@035fceb3c12fb0c6a9461b52775e16473133e591 # 1.95.0
+        with:
+          components: clippy
+
+      # Cache only the downloaded crates, not compiled output.
+      # The target/ directory is several GB and takes longer to tar+compress than it saves in rebuild time.
+      - name: Cache Cargo registry
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: |
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
+          key: linux-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: linux-cargo-
+
+      - name: Build
+        run: cargo build --workspace
+
+      - name: Test
+        run: cargo test --workspace
+
+      - name: Clippy
+        run: cargo clippy --workspace -- -D warnings
+
+  deny:
+    name: Dependency audit
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: EmbarkStudios/cargo-deny-action@v2

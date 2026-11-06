@@ -1,0 +1,1060 @@
+[
+  {
+    "task_id": "Q26",
+    "arm": "baseline",
+    "coverage": 0.25,
+    "n_facts": 4,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "missing",
+        "quote": "",
+        "reasoning": "The answer answers 'Yes' and claims specific expiry-validation code paths exist in/linked to stock_entry.py (e.g., StockEntry.validate_batch() calling expiry checks), directly contradicting the gold claim that no 'expiry'/'expired' validation exists anywhere in stock_entry.py."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "missing",
+        "quote": "",
+        "reasoning": "The answer never mentions get_non_expired_batches() or serial_and_batch_bundle.py's picker/suggestion-based FEFO filtering; it only discusses a different, allegedly validate-time mechanism in serial_batch_bundle_service.py."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "select and submit an entry against an already-expired batch without the system throwing an error",
+        "reasoning": "The answer explicitly concludes that for Material Issue/Transfer purposes a user can select and submit an expired batch without an error being thrown, matching the behavioral claim in fact 2."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "missing",
+        "quote": "",
+        "reasoning": "The answer does not distinguish picker/suggestion-only filtering from submit-time enforcement; instead it asserts submit-time validation logic exists but is excluded for certain purposes, which is a different and unsupported framing than the gold fact."
+      }
+    ]
+  },
+  {
+    "task_id": "Q21",
+    "arm": "codegraph-colby",
+    "coverage": 0.8333,
+    "n_facts": 6,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "It takes a **session-level** advisory lock via `frappe.db.advisory_lock((\"stock_repost\", item_code, warehouse), timeout=REPOST_LOCK_TIMEOUT)`",
+        "reasoning": "Matches the repost_gate mechanism, key tuple, and session-level Postgres advisory lock; MariaDB fallback also noted elsewhere in the answer."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "Used in `repost_future_sle()` (line 335) to wrap each call to `update_entries_after(...)`",
+        "reasoning": "States repost_gate wraps update_entries_after inside repost_future_sle's loop, matching the fact."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "It deliberately does **not** gate the synchronous `repost_current_voucher` submit path, to avoid blocking a live submit behind a background repost job",
+        "reasoning": "Directly states the synchronous submit path is unwrapped and why."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "covered",
+        "quote": "it takes a **transaction-scoped** advisory lock keyed on `(\"batch-valuation\", item_code, warehouse)` via `frappe.db.transaction_advisory_lock(...)`",
+        "reasoning": "Correctly names the function, lock type, and key tuple, and ties it to outgoing/outward valuation computation."
+      },
+      {
+        "fact_index": 4,
+        "verdict": "covered",
+        "quote": "PostgreSQL doesn't have gap locks and can't do `FOR UPDATE` together with `GROUP BY`, so three Postgres-specific **advisory-lock gates** were added to compensate",
+        "reasoning": "Conveys the rationale that Postgres lacks gap locks/grouped FOR UPDATE support so advisory locks substitute, matching the documented reasoning."
+      },
+      {
+        "fact_index": 5,
+        "verdict": "missing",
+        "quote": "",
+        "reasoning": "The answer never mentions test_serial_and_batch_bundle.py, pg_locks assertions, or the postgres-only skip condition."
+      }
+    ]
+  },
+  {
+    "task_id": "Q11",
+    "arm": "codegraph",
+    "coverage": 0.75,
+    "n_facts": 6,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "partial",
+        "quote": "`erpnext/accounts/doctype/sales_invoice/mapper.py::create_dunning()`",
+        "reasoning": "Answer names both create_dunning and postprocess_dunning in mapper.py but never states postprocess_dunning is nested inside create_dunning."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "if source.party_account_currency and source.party_account_currency != source.currency:\n    row.outstanding = source.payment_schedule[0].outstanding",
+        "reasoning": "Matches the gold fact exactly, including the single-row special case."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "`Sales Invoice.outstanding_amount` is tracked **in `party_account_currency`**, not necessarily in the invoice's own transaction currency.",
+        "reasoning": "States the currency mismatch reasoning matching the gold fact."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "covered",
+        "quote": "else:\n    row.outstanding = source.get(\"outstanding_amount\")",
+        "reasoning": "Matches the fallback behavior exactly."
+      },
+      {
+        "fact_index": 4,
+        "verdict": "missing",
+        "quote": "",
+        "reasoning": "No mention of any regression test in the answer."
+      },
+      {
+        "fact_index": 5,
+        "verdict": "covered",
+        "quote": "For multi-term invoices (more than one `Payment Schedule` row), this override block is skipped entirely",
+        "reasoning": "Explains that the special case applies only for single-term invoices and multi-term invoices use the general mapped-doc copy."
+      }
+    ]
+  },
+  {
+    "task_id": "Q21",
+    "arm": "baseline",
+    "coverage": 0.5,
+    "n_facts": 6,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "it takes a **session-level Postgres advisory lock** keyed by `(\"stock_repost\", item_code, warehouse)`",
+        "reasoning": "Candidate correctly identifies repost_gate in stock_ledger.py using a session-level Postgres advisory lock keyed by (\"stock_repost\", item_code, warehouse), with no-op fallback on MariaDB."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "`with repost_gate(item_code, warehouse): obj = update_entries_after(...)`",
+        "reasoning": "Candidate explicitly shows repost_gate wrapping update_entries_after inside repost_future_sle and explains it prevents lock-order deadlocks by acquiring the advisory lock before row-level locks."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "partial",
+        "quote": "the synchronous submit path is *not* gated here (to avoid blocking normal document submission behind a long-running background repost)",
+        "reasoning": "Candidate correctly states the synchronous submit path is not wrapped by repost_gate for this reason, but never names the specific function repost_current_voucher."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "missing",
+        "quote": "",
+        "reasoning": "Candidate never mentions BatchNoValuation.calculate_avg_rate, serial_batch_bundle.py, or a 'batch-valuation' keyed lock limited to outward transactions; it instead invents a different, unsupported 'sle_processing_gate' mechanism."
+      },
+      {
+        "fact_index": 4,
+        "verdict": "partial",
+        "quote": "MariaDB's locking `SELECT ... FOR UPDATE` on the \"previous SLE\" automatically takes gap locks",
+        "reasoning": "The candidate reproduces the gap-lock-vs-no-gap-lock rationale conceptually, but attaches it to a fabricated sle_processing_gate/stock-sle lock rather than the actual batch-valuation advisory lock in BatchNoValuation.calculate_avg_rate."
+      },
+      {
+        "fact_index": 5,
+        "verdict": "missing",
+        "quote": "",
+        "reasoning": "The answer contains no mention of test_serial_and_batch_bundle.py, pg_locks, or a postgres-only skipped test asserting advisory lock growth."
+      }
+    ]
+  },
+  {
+    "task_id": "Q21",
+    "arm": "codegraph",
+    "coverage": 0.5833,
+    "n_facts": 6,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "session-level Postgres advisory lock** keyed on `(\"stock_repost\", item_code, warehouse)`",
+        "reasoning": "Candidate correctly identifies repost_gate, file, session-level advisory lock, key, and fallback to nullcontext on non-Postgres/older Frappe."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "called from `repost_future_sle` (line 335): `with repost_gate(item_code, warehouse): obj = update_entries_after(...)`",
+        "reasoning": "Matches gold fact that repost_gate wraps update_entries_after inside repost_future_sle's loop."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "the synchronous `repost_current_voucher` submit path (`make_sl_entries` → `repost_current_voucher`) is *not* gated this way, so a live document submit is never blocked behind a background repost",
+        "reasoning": "Directly states the submit path is not wrapped by repost_gate and explains the rationale matching the gold fact."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "missing",
+        "quote": "",
+        "reasoning": "Candidate never mentions BatchNoValuation.calculate_avg_rate, serial_batch_bundle.py, the 'batch-valuation' lock key, or the outward-transaction-only scoping; it instead discusses a different function (sle_processing_gate with 'stock-sle' key)."
+      },
+      {
+        "fact_index": 4,
+        "verdict": "partial",
+        "quote": "on MariaDB, the locking reads used to find the \"previous SLE\" take **gap locks**",
+        "reasoning": "The MariaDB-gap-locks-vs-Postgres-no-gap-locks rationale and transaction-scoped auto-release-at-commit logic are present, but attributed to a different (seemingly conflated/invented) lock rather than the batch valuation lock described in the gold fact."
+      },
+      {
+        "fact_index": 5,
+        "verdict": "missing",
+        "quote": "",
+        "reasoning": "Candidate does not mention test_serial_and_batch_bundle.py, the postgres-only skip condition, or the pg_locks advisory assertion."
+      }
+    ]
+  },
+  {
+    "task_id": "Q11",
+    "arm": "baseline",
+    "coverage": 1.0,
+    "n_facts": 6,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "`create_dunning()` in `erpnext/accounts/doctype/sales_invoice/mapper.py`",
+        "reasoning": "Answer identifies create_dunning in mapper.py and separately names the nested postprocess_dunning function within it."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "row.outstanding = source.payment_schedule[0].outstanding",
+        "reasoning": "Answer's code block shows the single-row special case setting outstanding from payment_schedule[0].outstanding when party_account_currency != currency."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "is stored in the **receivable account's currency**, not the invoice's transaction currency",
+        "reasoning": "Answer explains outstanding_amount is in party_account_currency while Payment Schedule/Overdue Payment outstanding fields are in transaction currency."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "covered",
+        "quote": "row.outstanding = source.get(\"outstanding_amount\")",
+        "reasoning": "The else branch in the quoted code shows fallback to Sales Invoice's own outstanding_amount when currencies match."
+      },
+      {
+        "fact_index": 4,
+        "verdict": "covered",
+        "quote": "asserts `si.outstanding_amount == 5000.0` (INR) but `si.payment_schedule[0].outstanding == 100.0` (USD), then asserts the resulting `Dunning.overdue_payments[0].outstanding == 100.0`",
+        "reasoning": "Answer describes the exact regression test scenario matching the gold fact."
+      },
+      {
+        "fact_index": 5,
+        "verdict": "covered",
+        "quote": "if source.payment_schedule and len(source.payment_schedule) == 1:",
+        "reasoning": "Answer shows the special case is gated on exactly one payment schedule row, with the general get_mapped_doc copy mechanism used otherwise."
+      }
+    ]
+  },
+  {
+    "task_id": "Q06",
+    "arm": "graphify",
+    "coverage": 0.8125,
+    "n_facts": 8,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "Processing via `process_gl_map(gl_map, merge_entries, from_repost=from_repost)`",
+        "reasoning": "Answer describes process_gl_map then save_entries sequence and the cancel delegation to make_reverse_gl_entries."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "merge_similar_entries groups lines sharing the same `(account, cost_center, party, party_type, voucher_detail_no, against_voucher, against_voucher_type, project, finance_book, voucher_no, advance_voucher_type, advance_voucher_no, <accounting dimensions>)` tuple",
+        "reasoning": "Answer names the merge key fields and states debit/credit are summed."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "**`process_debit_credit_difference`** — the **round-off handling**: computes total debit−credit diff at GL precision",
+        "reasoning": "Answer explains the allowance check and make_round_off_gle call against the company round-off account."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "partial",
+        "quote": "freezing-date check, PCV (Period Closing Voucher) validation",
+        "reasoning": "Mentions both checks exist but omits function names (check_freezing_date, validate_against_pcv) and the role-exception/last-PCV behavioral details."
+      },
+      {
+        "fact_index": 4,
+        "verdict": "covered",
+        "quote": "`erpnext/accounts/doctype/sales_invoice/sales_invoice.py` — `SalesInvoice.make_gl_entries` (line 1030)",
+        "reasoning": "Sales Invoice, Purchase Invoice, Payment Entry, and Journal Entry call sites are all listed explicitly."
+      },
+      {
+        "fact_index": 5,
+        "verdict": "covered",
+        "quote": "`erpnext/controllers/stock_controller.py` — `StockController.make_gl_entries`",
+        "reasoning": "Answer identifies stock_controller.py as the shared caller covering Delivery Note, Purchase Receipt, Stock Entry, Stock Reconciliation and more."
+      },
+      {
+        "fact_index": 6,
+        "verdict": "covered",
+        "quote": "`erpnext/accounts/doctype/repost_accounting_ledger/repost_accounting_ledger.py`",
+        "reasoning": "Period Closing Voucher, deferred revenue, asset doctypes, and repost_accounting_ledger are all explicitly listed as affected."
+      },
+      {
+        "fact_index": 7,
+        "verdict": "missing",
+        "quote": "",
+        "reasoning": "The answer never states that Sales Invoice calls make_gl_entries with merge_entries=False or contrasts this with Journal/Payment Entry defaults."
+      }
+    ]
+  },
+  {
+    "task_id": "Q01",
+    "arm": "codegraph",
+    "coverage": 0.75,
+    "n_facts": 6,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "partial",
+        "quote": "A `Sales Order` is a pure commitment document — no stock or GL impact.",
+        "reasoning": "Candidate states SO has no GL impact but never names SalesOrder.on_submit() or the credit-limit/reserved-qty/approving-authority checks it performs."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "`self.make_gl_entries()` → `StockController.make_gl_entries()` → `StockController.get_gl_entries()`",
+        "reasoning": "Candidate correctly identifies DeliveryNote.on_submit() calling update_stock_ledger() then make_gl_entries() inherited from StockController, booking against SDBNB/COGS account."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "partial",
+        "quote": "GL logic in `erpnext/accounts/doctype/sales_invoice/services/gl_composer.py::SalesInvoiceGLComposer`",
+        "reasoning": "Candidate names the gl_composer.py file and SalesInvoiceGLComposer class and separately mentions update_billing_status_in_dn(), but never explicitly ties these as the two calls made sequentially inside SalesInvoice.on_submit()."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "covered",
+        "quote": "`_append_sdbnb_gl_entries()` then posts a matched pair: **Credit SDBNB** account / **Debit the item's real Cost of Goods Sold account**, for the same amount — moving the cost out of the holding account into P&L.",
+        "reasoning": "Candidate describes looking up the DN's SLE and expense_account, checking if it's the SDBNB account, and reversing/re-booking it as real COGS tied to the invoice."
+      },
+      {
+        "fact_index": 4,
+        "verdict": "covered",
+        "quote": "is what keeps COGS recognized exactly once across any gap between Delivery Note and Sales Invoice submission.",
+        "reasoning": "Candidate explicitly states COGS is recognized exactly once despite timing gaps, with the invoice-side reclassifying rather than both sides posting independently."
+      },
+      {
+        "fact_index": 5,
+        "verdict": "partial",
+        "quote": "instead `make_item_gl_entries` books the stock/COGS entries directly via the inherited `StockController.get_gl_entries()` — the single place the cost is ever posted for that path.",
+        "reasoning": "Candidate covers that update_stock=1 bypasses the SDBNB-reversal path and books GL entries directly, but does not mention the invoice also calling its own update_stock_ledger() for stock ledger entries in this scenario."
+      }
+    ]
+  },
+  {
+    "task_id": "Q06",
+    "arm": "codegraph-colby",
+    "coverage": 0.875,
+    "n_facts": 8,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "process_gl_map(gl_map, merge_entries, from_repost=from_repost)",
+        "reasoning": "Answer describes process_gl_map then save_entries flow and cancel delegating to make_reverse_gl_entries."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "Groups entries by a merge key built from `get_merge_properties()` (account, cost_center, party, party_type, voucher_detail_no, against_voucher/type, project, finance_book, voucher_no, advance_voucher_type/no, plus active accounting dimensions).",
+        "reasoning": "Matches the merge key fields and summing behavior described in the gold fact."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "Else if the imbalance is non-trivial → `make_round_off_gle(...)` creates/updates a round-off GL line on the company's `round_off_account`",
+        "reasoning": "Answer describes the debit/credit equality enforcement and round-off booking via make_round_off_gle using company round-off account."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "partial",
+        "quote": "Validates freezing date / against Period Closing Voucher, then iterates and calls",
+        "reasoning": "Mentions freezing-date and PCV validation generally but omits the specific function names (check_freezing_date, validate_against_pcv) and the role-bypass/last-PCV details."
+      },
+      {
+        "fact_index": 4,
+        "verdict": "covered",
+        "quote": "Sales Invoice** — `erpnext/accounts/doctype/sales_invoice/sales_invoice.py:1030` `SalesInvoice.make_gl_entries()`, calls with `merge_entries=False`",
+        "reasoning": "Answer explicitly lists Sales Invoice, Purchase Invoice, Payment Entry, and Journal Entry as direct callers with file locations."
+      },
+      {
+        "fact_index": 5,
+        "verdict": "covered",
+        "quote": "Stock Controller base class** — `erpnext/controllers/stock_controller.py:178-205` `StockController.make_gl_entries()`, inherited by **Delivery Note, Purchase Receipt, Stock Entry, Stock Reconciliation",
+        "reasoning": "Matches gold fact's named stock controller file and document types."
+      },
+      {
+        "fact_index": 6,
+        "verdict": "covered",
+        "quote": "Asset / Asset Repair / Asset Capitalization** — `erpnext/assets/doctype/asset/asset.py:979`",
+        "reasoning": "Answer lists Period Closing Voucher, deferred revenue/deferred accounting, asset doctypes, and repost utilities (repost_accounting_ledger.py), matching the gold fact's modules."
+      },
+      {
+        "fact_index": 7,
+        "verdict": "partial",
+        "quote": "calls with `merge_entries=False` explicitly (relies on its `SalesInvoiceGLComposer` to pre-shape entries).",
+        "reasoning": "States Sales Invoice uses merge_entries=False but does not explicitly draw the contrast that this makes merge behavior changes affect Journal/Payment Entry differently."
+      }
+    ]
+  },
+  {
+    "task_id": "Q11",
+    "arm": "graphify",
+    "coverage": 0.8333,
+    "n_facts": 6,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "`postprocess_dunning()` override (same file, lines 573‑598)",
+        "reasoning": "Answer identifies postprocess_dunning nested function in mapper.py's create_dunning as the location for row population."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "if source.party_account_currency and source.party_account_currency != source.currency:\n                row.outstanding = source.payment_schedule[0].outstanding",
+        "reasoning": "Matches the special-case logic for single payment schedule row with differing currencies."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "`Sales Invoice.outstanding_amount` is stored in the **party account currency**, not necessarily the transaction currency",
+        "reasoning": "Answer explains outstanding_amount is in party_account_currency while Payment Schedule.outstanding is in transaction currency, matching the gold fact."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "covered",
+        "quote": "row.outstanding = source.get(\"outstanding_amount\")",
+        "reasoning": "Shows the fallback to outstanding_amount when currencies match, as described in the else branch."
+      },
+      {
+        "fact_index": 4,
+        "verdict": "covered",
+        "quote": "a USD invoice (`conversion_rate=50`, `rate=100`) posted against the INR account `Debtors - _TC` has `outstanding_amount == 5000.0` (INR) but `payment_schedule[0].outstanding == 100.0` (USD); after `create_dunning_from_sales_invoice`, `dunning.overdue_payments[0].outstanding == 100.0`",
+        "reasoning": "Answer cites the regression test with matching details about USD/INR and the specific field values."
+      },
+      {
+        "fact_index": 5,
+        "verdict": "missing",
+        "quote": "mapped doc` maps each `Payment Schedule` row of the invoice to a new `Overdue Payment` child row on the `Dunning`, but only for schedule rows that are actually overdue",
+        "reasoning": "The answer describes the general mapping condition but does not explicitly state that the single-row special case only applies when len==1 and that multi-row invoices use the general outstanding>0 filtering mapping instead; it does show the if len==1 check but doesn't explicitly contrast with the multi-row fallback behavior.",
+        "verdict_original": "partial",
+        "audit_note": "quote not found verbatim in answer"
+      }
+    ]
+  },
+  {
+    "task_id": "Q16",
+    "arm": "codegraph",
+    "coverage": 0.6667,
+    "n_facts": 6,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "it queries the `Item` doctype for any Item whose `name` is in the submitted `item_codes` list **and** whose `variant_of` field is *also* in that same `item_codes` list",
+        "reasoning": "Candidate precisely describes the query logic matching the gold fact."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "specifically **only when `apply_on == \"Item Code\"`**",
+        "reasoning": "Candidate states the check only runs for Item Code apply_on and shows it is called from within validate_duplicate_apply_on."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "frappe.bold(variant.name), frappe.bold(variant.variant_of)",
+        "reasoning": "Candidate shows the throw uses frappe.bold on both variant and template names."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "covered",
+        "quote": "a template item's own `variant_of` is empty/null (templates aren't variants of anything)",
+        "reasoning": "Candidate explains the variant_of field links variant to template item."
+      },
+      {
+        "fact_index": 4,
+        "verdict": "missing",
+        "quote": "",
+        "reasoning": "Candidate never explains the rationale about templates implicitly applying to variants or the 'Multiple Price Rules exist' error."
+      },
+      {
+        "fact_index": 5,
+        "verdict": "missing",
+        "quote": "",
+        "reasoning": "Candidate does not mention the corresponding test in test_pricing_rule.py."
+      }
+    ]
+  },
+  {
+    "task_id": "Q16",
+    "arm": "codegraph-colby",
+    "coverage": 0.6667,
+    "n_facts": 6,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "filters={\"name\": (\"in\", item_codes), \"variant_of\": (\"in\", item_codes)},",
+        "reasoning": "Candidate shows the exact query logic matching the gold fact."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "Specifically for `apply_on == \"Item Code\"` (line 159-160), it then calls `self.validate_template_with_variant(values)`",
+        "reasoning": "Candidate correctly identifies the apply_on=='Item Code' gating and the call chain from validate_duplicate_apply_on."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "Variant {0} and its template {1} cannot both be added to the same Pricing Rule",
+        "reasoning": "Candidate shows the exact throw message with frappe.bold usage on both names."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "covered",
+        "quote": "whose `variant_of` field is *also* in that same list",
+        "reasoning": "Candidate explains the variant_of field links variant to template item."
+      },
+      {
+        "fact_index": 4,
+        "verdict": "missing",
+        "quote": "",
+        "reasoning": "Candidate never explains the rationale about templates already implicitly applying discounts or the prior 'Multiple Price Rules exist' error."
+      },
+      {
+        "fact_index": 5,
+        "verdict": "missing",
+        "quote": "",
+        "reasoning": "Candidate does not mention test_pricing_rule.py or any corresponding test."
+      }
+    ]
+  },
+  {
+    "task_id": "Q21",
+    "arm": "graphify",
+    "coverage": 0.5833,
+    "n_facts": 6,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "frappe.db.advisory_lock((\"stock_repost\", item_code, warehouse), timeout=REPOST_LOCK_TIMEOUT)` — a **session-level Postgres advisory lock**, keyed by the item/warehouse tuple",
+        "reasoning": "Candidate correctly identifies repost_gate's session-level advisory lock on Postgres with the correct key, and notes the no-op fallback on MariaDB."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "Called in `repost_future_sle()` (line 335) around each call to `update_entries_after(...)`",
+        "reasoning": "Candidate describes repost_gate wrapping update_entries_after inside repost_future_sle and explains it avoids racing into row-level locks in different orders."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "The gate deliberately does **not** apply to the synchronous `repost_current_voucher` path (submit-time reposting)",
+        "reasoning": "Candidate explicitly states repost_current_voucher is not gated, to avoid blocking submit behind a repost."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "missing",
+        "quote": "",
+        "reasoning": "Candidate never mentions BatchNoValuation.calculate_avg_rate, serial_batch_bundle.py, or the 'batch-valuation' lock key; it instead describes a different, seemingly fabricated 'sle_processing_gate' mechanism."
+      },
+      {
+        "fact_index": 4,
+        "verdict": "partial",
+        "quote": "The advisory lock forces one transaction to fully finish computing (and writing) the running qty/valuation-rate/stock-value queue before the next one starts reading, eliminating the double-computation of the average rate",
+        "reasoning": "The rationale (MariaDB gap locks vs Postgres lacking them, resolved via transaction-scoped advisory lock) is substantively present but attached to a different, unverified mechanism name rather than the gold's BatchNoValuation.calculate_avg_rate."
+      },
+      {
+        "fact_index": 5,
+        "verdict": "missing",
+        "quote": "",
+        "reasoning": "The answer does not mention test_serial_and_batch_bundle.py, the postgres-only skip condition, or the pg_locks/locktype='advisory' assertion."
+      }
+    ]
+  },
+  {
+    "task_id": "Q16",
+    "arm": "baseline",
+    "coverage": 0.5833,
+    "n_facts": 6,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "filters={\"name\": (\"in\", item_codes), \"variant_of\": (\"in\", item_codes)},",
+        "reasoning": "Candidate accurately describes the exact query logic matching the gold fact."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "If self.apply_on == \"Item Code\"**, it additionally calls `self.validate_template_with_variant(values)`",
+        "reasoning": "Candidate correctly states the check only runs for apply_on == Item Code, within validate_duplicate_apply_on's path."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "partial",
+        "quote": "Variant {variant.name} and its template {variant.variant_of} cannot both be added to the same Pricing Rule",
+        "reasoning": "Candidate gives the correct throw message naming both items but never mentions the frappe.bold formatting detail."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "covered",
+        "quote": "Since `variant_of` is only set on variant items (pointing to their template)",
+        "reasoning": "Candidate explicitly explains the variant_of field's role linking variant to template."
+      },
+      {
+        "fact_index": 4,
+        "verdict": "missing",
+        "quote": "",
+        "reasoning": "Candidate never explains the rationale about templates implicitly applying to variants or the resulting 'Multiple Price Rules exist' error."
+      },
+      {
+        "fact_index": 5,
+        "verdict": "missing",
+        "quote": "",
+        "reasoning": "Candidate does not mention the corresponding test in test_pricing_rule.py at all."
+      }
+    ]
+  },
+  {
+    "task_id": "Q01",
+    "arm": "graphify",
+    "coverage": 0.8333,
+    "n_facts": 6,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "partial",
+        "quote": "Pure commitment document — no stock or GL impact.",
+        "reasoning": "Correctly states SO has no GL impact but omits that on_submit() specifically only handles credit limit, reserved qty, and approving-authority checks."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "`DeliveryNote.on_submit()` calls `self.update_stock_ledger()` (creates Stock Ledger Entries, computing `stock_value_difference`), then `self.make_gl_entries()`.",
+        "reasoning": "Matches the gold fact's description of on_submit calling update_stock_ledger then make_gl_entries, also notes inheritance from stock_controller.py and booking against provisional/COGS account."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "partial",
+        "quote": "`get_gl_entries()` (line ~1070) delegates to `SalesInvoiceGLComposer(self).compose()` (`erpnext/accounts/doctype/sales_invoice/services/gl_composer.py`).",
+        "reasoning": "Correctly identifies the gl_composer.py file and SalesInvoiceGLComposer class, but never mentions update_billing_status_in_dn() being called in on_submit()."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "covered",
+        "quote": "`_get_sdbnb_booking_for_item()` — for each invoice item linked to a `dn_detail`, looks up the Delivery Note Item's `expense_account` and the corresponding Stock Ledger Entry (`stock_value_difference`/`actual_qty`) to compute the valuation amount to reclassify.",
+        "reasoning": "Describes the exact reconciliation mechanism: per-line lookup of DN's SLE value and expense_account, and reversing/re-booking as real COGS when it's the SDBNB account."
+      },
+      {
+        "fact_index": 4,
+        "verdict": "covered",
+        "quote": "so the P&L recognizes the expense exactly once (at billing), while the stock reduction itself was recorded exactly once (at delivery) and is never re-entered.",
+        "reasoning": "Explicitly states COGS is recognized exactly once despite the DN/SI timing gap, consistent with the invoice-side reversal logic described."
+      },
+      {
+        "fact_index": 5,
+        "verdict": "covered",
+        "quote": "does the Sales Invoice itself reduce stock (`self.update_stock_ledger()`) and call `super(SalesInvoice, doc).get_gl_entries()` — which resolves to `StockController.get_gl_entries()` → `BaseStockGLComposer(self).compose()` directly",
+        "reasoning": "Matches the gold fact describing that when update_stock is set, the invoice does its own stock ledger update and GL entries directly rather than via DN reversal."
+      }
+    ]
+  },
+  {
+    "task_id": "Q01",
+    "arm": "codegraph-colby",
+    "coverage": 0.9167,
+    "n_facts": 6,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "partial",
+        "quote": "It is a pure commitment document: no stock movement, no GL entries.",
+        "reasoning": "Candidate correctly states SO posts no GL entries but never names on_submit() or the credit-limit/reserved-qty/approving-authority checks the gold fact specifies."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "then calls `StockController.make_gl_entries()` (`erpnext/controllers/stock_controller.py:178`)",
+        "reasoning": "Candidate correctly identifies on_submit() creating SLEs then calling make_gl_entries() inherited from stock_controller.py, booking inventory against expense/provisional account."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "`SalesInvoiceGLComposer(self).compose()` (`erpnext/accounts/doctype/sales_invoice/services/gl_composer.py`)",
+        "reasoning": "Candidate names the gl_composer.py file and SalesInvoiceGLComposer, and separately cites SalesInvoice.update_billing_status_in_dn() (sales_invoice.py:1084)."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "covered",
+        "quote": "read the *same* `stock_value_difference` already recorded on that DN's `Stock Ledger Entry`",
+        "reasoning": "Candidate describes the SDBNB composer functions reading the DN's SLE value and expense_account and reclassifying it, matching the reconciliation mechanism."
+      },
+      {
+        "fact_index": 4,
+        "verdict": "covered",
+        "quote": "without ever creating a second valuation movement — the amount is lifted out of SDBNB, not created anew",
+        "reasoning": "Candidate explains COGS is recognized once via reversal/reclassification rather than independent double posting."
+      },
+      {
+        "fact_index": 5,
+        "verdict": "covered",
+        "quote": "only calls `self.update_stock_ledger()` (creating new SLEs) **`if self.update_stock == 1`**",
+        "reasoning": "Candidate explicitly describes that when update_stock is set on the Sales Invoice, it does its own update_stock_ledger() and GL entries directly, bypassing the DN-reversal path."
+      }
+    ]
+  },
+  {
+    "task_id": "Q01",
+    "arm": "baseline",
+    "coverage": 0.75,
+    "n_facts": 6,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "partial",
+        "quote": "Pure commercial document — no stock or GL impact. `SalesOrder.update_delivery_status()`/`update_reserved_qty()` track `per_delivered`.",
+        "reasoning": "Candidate correctly states no GL impact but does not name on_submit() or mention credit limit/approving-authority checks."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "`self.make_gl_entries()` (inherited from `StockController.make_gl_entries` in `erpnext/controllers/stock_controller.py`)",
+        "reasoning": "Matches the gold fact precisely: on_submit calls update_stock_ledger() and make_gl_entries() inherited from stock_controller.py."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "partial",
+        "quote": "`SalesInvoice.get_gl_entries()` delegates to `SalesInvoiceGLComposer` (`erpnext/accounts/doctype/sales_invoice/services/gl_composer.py`)",
+        "reasoning": "Correctly names the composer and file, but never ties this to SalesInvoice.on_submit() nor mentions update_billing_status_in_dn()."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "covered",
+        "quote": "`SalesInvoiceGLComposer` looks up the matching DN Item's `expense_account` and the original `Stock Ledger Entry` (`voucher_no=delivery_note, voucher_detail_no=dn_detail`) to get the exact `stock_value_difference`",
+        "reasoning": "Candidate accurately describes the SDBNB reversal mechanism matching the gold fact in detail."
+      },
+      {
+        "fact_index": 4,
+        "verdict": "covered",
+        "quote": "the net debit to P&L still happens only once, timed to coincide with revenue recognition at invoicing",
+        "reasoning": "Candidate explicitly states COGS is recognized once and the invoice-side reclassifies what DN already posted."
+      },
+      {
+        "fact_index": 5,
+        "verdict": "partial",
+        "quote": "is only added when the Sales Invoice *itself* moves stock (`update_stock=1`, e.g. POS or a direct invoice with no prior Delivery Note)",
+        "reasoning": "Candidate correctly describes the update_stock bypass mechanism but never names the update_stock_ledger() function call for the Sales Invoice itself."
+      }
+    ]
+  },
+  {
+    "task_id": "Q11",
+    "arm": "codegraph-colby",
+    "coverage": 0.75,
+    "n_facts": 6,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "The whole flow lives in `create_dunning()` / `postprocess_dunning()` in **`erpnext/accounts/doctype/sales_invoice/mapper.py`**",
+        "reasoning": "Correctly identifies both functions and the file location."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "if source.party_account_currency and source.party_account_currency != source.currency:\n                   row.outstanding = source.payment_schedule[0].outstanding",
+        "reasoning": "Matches the exact special-case logic for single payment schedule row with mismatched currencies."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "`Sales Invoice.outstanding_amount` is expressed in the **party/receivable-account currency** (`party_account_currency`), not necessarily the invoice's transaction currency.",
+        "reasoning": "States the currency distinction between outstanding_amount and payment schedule/overdue payment outstanding fields."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "covered",
+        "quote": "When `party_account_currency == currency` (the common case — the receivable account is in the same currency as the invoice), it's safe and more precise to use `outstanding_amount` directly.",
+        "reasoning": "Correctly describes the fallback behavior when currencies match."
+      },
+      {
+        "fact_index": 4,
+        "verdict": "missing",
+        "quote": "",
+        "reasoning": "The answer never mentions a regression test with USD invoice against INR receivable account."
+      },
+      {
+        "fact_index": 5,
+        "verdict": "partial",
+        "quote": "Only schedule rows that are actually overdue and still have `outstanding > 0` become `Overdue Payment` rows.",
+        "reasoning": "Describes the general mapping behavior but doesn't explicitly state it applies specifically when multiple schedule rows exist as a contrast to the single-row special case."
+      }
+    ]
+  },
+  {
+    "task_id": "Q26",
+    "arm": "codegraph-colby",
+    "coverage": 0.125,
+    "n_facts": 4,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "missing",
+        "quote": "",
+        "reasoning": "Candidate explicitly claims the opposite — that ERPNext does block expired batches at validate/submit time — directly contradicting the gold fact of no such validation existing."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "missing",
+        "quote": "",
+        "reasoning": "Candidate never mentions get_non_expired_batches() or any picker/suggestion-only mechanism; instead it claims expiry is enforced via a distinct validate-time check, which is a different claim."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "partial",
+        "quote": "so for those two purposes the expiry guard is bypassed by this particular routine",
+        "reasoning": "For Material Issue/Transfer specifically the candidate concludes an expired batch can be submitted without error, matching the gold conclusion for those purposes, though the surrounding mechanism described (a validation that applies elsewhere) contradicts the gold's blanket 'no validation' claim."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "missing",
+        "quote": "",
+        "reasoning": "The candidate conflates suggestion-filtering with actual submit-time enforcement, asserting a real validate_serialized_batch/BatchExpiredError enforcement path rather than distinguishing picker-only filtering from submission enforcement."
+      }
+    ]
+  },
+  {
+    "task_id": "Q16",
+    "arm": "graphify",
+    "coverage": 0.5833,
+    "n_facts": 6,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "frappe.get_all(\"Item\", filters={\"name\": (\"in\", item_codes), \"variant_of\": (\"in\", item_codes)}, fields=[\"name\", \"variant_of\"])",
+        "reasoning": "Answer exactly describes the query filtering name and variant_of against the item-code list."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "specifically when `self.apply_on == \"Item Code\"` — calls `self.validate_template_with_variant(values)`",
+        "reasoning": "Answer correctly states the check only runs for apply_on == Item Code, within validate_duplicate_apply_on's path."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "partial",
+        "quote": "it calls `frappe.throw()` with the message *\"Variant {variant} and its template {template} cannot both be added to the same Pricing Rule\"*",
+        "reasoning": "Correctly describes the throw and message naming both items, but omits that frappe.bold is used to format the names."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "covered",
+        "quote": "a DB-side check on the `Item` table's `variant_of` field (the attribute that links a variant item back to its template item)",
+        "reasoning": "Explicitly states variant_of links variant to its template item."
+      },
+      {
+        "fact_index": 4,
+        "verdict": "missing",
+        "quote": "",
+        "reasoning": "The answer never explains the rationale about templates implicitly applying to variants or the resulting duplicate 'Multiple Price Rules exist' error."
+      },
+      {
+        "fact_index": 5,
+        "verdict": "missing",
+        "quote": "",
+        "reasoning": "The answer does not mention test_pricing_rule.py or any corresponding test case."
+      }
+    ]
+  },
+  {
+    "task_id": "Q06",
+    "arm": "codegraph",
+    "coverage": 0.9375,
+    "n_facts": 8,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "the single central entry point through which every accounting document posts its General Ledger rows",
+        "reasoning": "Answer explicitly states make_gl_entries is the central entry point, describes process_gl_map then save_entries flow, and cancel delegates to make_reverse_gl_entries."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "calls `merge_similar_entries`, which groups rows by a merge key (`account`, `cost_center`, `party`, `party_type`, `voucher_detail_no`, `against_voucher`/`against_voucher_type`",
+        "reasoning": "Answer describes the merge key fields and summing debit/credit for matching rows."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "it calls `make_round_off_gle`, which creates/updates/removes a round-off GL entry against the company's configured Round Off Account",
+        "reasoning": "Answer covers the tolerance check and round-off booking via make_round_off_gle using the company round-off account."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "partial",
+        "quote": "checks the freezing date, validates against Period Closing Vouchers",
+        "reasoning": "Answer mentions freezing date and PCV checks but omits the specific function names (check_freezing_date, validate_against_pcv) and the role-exception detail."
+      },
+      {
+        "fact_index": 4,
+        "verdict": "covered",
+        "quote": "**Sales Invoice** — `SalesInvoice.make_gl_entries` (`erpnext/accounts/doctype/sales_invoice/sales_invoice.py:1030`)",
+        "reasoning": "Answer explicitly lists Sales Invoice, Purchase Invoice, Payment Entry, and Journal Entry each with their own make_gl_entries call site."
+      },
+      {
+        "fact_index": 5,
+        "verdict": "covered",
+        "quote": "**Stock Controller base class** (shared by Stock Entry, Purchase Receipt, Delivery Note, Stock Reconciliation, Subcontracting Receipt, Landed Cost Voucher via `via_landed_cost_voucher`) — `erpnext/controllers/stock_controller.py:178,205,285`",
+        "reasoning": "Answer correctly identifies stock_controller.py as the shared call site for the listed stock document types."
+      },
+      {
+        "fact_index": 6,
+        "verdict": "covered",
+        "quote": "**Period Closing Voucher** — its `make_gl_entries` (`period_closing_voucher.py:172,475`)",
+        "reasoning": "Answer separately covers Period Closing Voucher, deferred revenue/accounting, Asset/Asset Repair/Asset Capitalization, and repost utilities including repost_accounting_ledger and repost_gle_for_stock_vouchers."
+      },
+      {
+        "fact_index": 7,
+        "verdict": "covered",
+        "quote": "calling with `merge_entries=False` (because `get_gl_entries()`/`services/gl_composer.py` already merges",
+        "reasoning": "Answer states Sales Invoice calls with merge_entries=False and notes merge behavior changes affect Journal/Payment Entry differently."
+      }
+    ]
+  },
+  {
+    "task_id": "Q26",
+    "arm": "graphify",
+    "coverage": 0.625,
+    "n_facts": 4,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "partial",
+        "quote": "which are exactly the two purposes used for \"issuing\" and \"transferring\" stock. So for those two purposes, no, ERPNext does **not** block submission of an expired batch today",
+        "reasoning": "The final conclusion matches gold's 'No' for issuing/transferring, but the answer frames this as 'Partially' and asserts validate-time expiry guards exist in stock_entry_detail.py and serial_batch_bundle_service.py for other purposes, contradicting gold's claim that no such validate-time mechanism exists anywhere for Stock Entry (only picker filtering)."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "partial",
+        "quote": "get_batches_from_stock_ledger_entries()`, `get_batches_from_serial_and_batch_bundle()`, and `get_batch_numbers()` in `erpnext/controllers/queries.py` filter out batches whose `expiry_date < today()/posting_date` by default",
+        "reasoning": "The answer identifies a similar concept (picker/query-level expiry filtering distinct from validation) but cites different functions/file (controllers/queries.py) rather than get_non_expired_batches() in serial_and_batch_bundle.py, and does not mention FEFO auto-selection."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "a user **can** submit a Stock Entry of purpose \"Material Issue\" or \"Material Transfer\" that references a batch whose `expiry_date` has already passed, and no `frappe.throw`/`BatchExpiredError` will be raised",
+        "reasoning": "This directly states that a user can submit a stock entry with an expired batch for issue/transfer without any error being thrown."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "partial",
+        "quote": "This only affects what shows up in the batch picker dropdown — it does not prevent a batch number from being saved/submitted via API, data import, or manual field entry.",
+        "reasoning": "The answer does draw a distinction between picker-level filtering and submission enforcement as gold fact 3 requires, but undermines this by also claiming other validate-time expiry guards exist for other purposes, which conflicts with gold's claim that only the picker/suggestion path implements filtering."
+      }
+    ]
+  },
+  {
+    "task_id": "Q26",
+    "arm": "codegraph",
+    "coverage": 0.125,
+    "n_facts": 4,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "missing",
+        "quote": "",
+        "reasoning": "The candidate directly contradicts this fact, claiming a submit-time expiry validation does exist in stock_entry.py (via validate_batch) for certain purposes, rather than stating the absence of any such check."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "missing",
+        "quote": "",
+        "reasoning": "The candidate never mentions get_non_expired_batches() or the FEFO-style picker/suggestion filtering mechanism in serial_and_batch_bundle.py; it instead describes a different mechanism (get_expired_batch_items for pulling expired stock)."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "partial",
+        "quote": "selecting an expired batch for a \"Material Issue\" or \"Material Transfer\" Stock Entry does **not** trigger a submit-time error",
+        "reasoning": "The directional conclusion for Issue/Transfer matches the gold fact, but the candidate frames it as an exception within a purpose-gated system that supposedly does validate for other purposes, which is not the same as the gold claim that no expiry check exists anywhere in stock_entry.py."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "missing",
+        "quote": "",
+        "reasoning": "The candidate does not draw the specific distinction between expiry filtering existing in a picker/suggestion helper versus being enforced as a validate-time guard; its distinction is instead based on purpose-gating of a (fabricated) validate_batch check."
+      }
+    ]
+  },
+  {
+    "task_id": "Q06",
+    "arm": "baseline",
+    "coverage": 0.8125,
+    "n_facts": 8,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "4. **`process_gl_map(gl_map, merge_entries, from_repost=from_repost)`**, which:",
+        "reasoning": "Answer explicitly describes process_gl_map then save_entries as the core flow, and cancel delegating to make_reverse_gl_entries."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "merge_similar_entries()`: groups rows by a **merge key** (`account, cost_center, party, party_type, voucher_detail_no, against_voucher, against_voucher_type, project, finance_book, voucher_no, advance_voucher_type, advance_voucher_no` + enabled accounting dimensions), summing debit/credit",
+        "reasoning": "Answer describes the merge key fields and summing behavior matching the gold fact."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "make_round_off_gle()` creates/updates a GL row against the company's `round_off_account`",
+        "reasoning": "Answer details process_debit_credit_difference enforcing allowance and booking round-off via make_round_off_gle with company account."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "partial",
+        "quote": "Freezing-date / Period Closing Voucher checks (`check_freezing_date`, `validate_against_pcv`).",
+        "reasoning": "Functions are named but the specific behaviors (role exception, blocking entries before last PCV) are not described."
+      },
+      {
+        "fact_index": 4,
+        "verdict": "covered",
+        "quote": "erpnext/accounts/doctype/payment_entry/payment_entry.py` — `PaymentEntry.make_gl_entries()`",
+        "reasoning": "Answer lists Sales Invoice, Purchase Invoice, Payment Entry, and Journal Entry each with their own make_gl_entries call site."
+      },
+      {
+        "fact_index": 5,
+        "verdict": "covered",
+        "quote": "erpnext/controllers/stock_controller.py` — `StockController.make_gl_entries()`, the shared base used (via inheritance) by:",
+        "reasoning": "Answer correctly identifies stock_controller.py as the shared base covering Delivery Note, Purchase Receipt, Stock Entry, Stock Reconciliation and more."
+      },
+      {
+        "fact_index": 6,
+        "verdict": "covered",
+        "quote": "erpnext/accounts/doctype/repost_accounting_ledger/repost_accounting_ledger.py` — calls `doc.make_gl_entries(...)` across many voucher types during repost/cancel-resubmit cycles",
+        "reasoning": "Answer lists Period Closing Voucher, deferred revenue, asset doctypes (Asset, Asset Capitalization, Asset Repair), and repost utilities."
+      },
+      {
+        "fact_index": 7,
+        "verdict": "missing",
+        "quote": "",
+        "reasoning": "The answer never states that Sales Invoice calls make_gl_entries with merge_entries=False; it only notes Period Closing Voucher and Asset Capitalization use merge_entries=False."
+      }
+    ]
+  }
+]

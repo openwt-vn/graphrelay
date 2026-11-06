@@ -1,0 +1,137 @@
+{
+  "arm": "baseline",
+  "provider": "openrouter-glm-5-3-flash",
+  "model": "openrouter-glm-5-3-flash",
+  "base_url": "http://localhost:4000",
+  "pricing": {
+    "in": 0.07125,
+    "out": 0.2375,
+    "cache_read": 0.01425,
+    "cache_write": 0.07125
+  },
+  "max_turns": 30,
+  "runs": [
+    {
+      "task_id": "S01",
+      "cost_usd": 0.0008,
+      "tokens": {
+        "input": 3380,
+        "output": 1199,
+        "cache_read": 19712,
+        "cache_write": 0
+      }
+    },
+    {
+      "task_id": "S02",
+      "cost_usd": 0.001,
+      "tokens": {
+        "input": 6550,
+        "output": 1450,
+        "cache_read": 13312,
+        "cache_write": 0
+      }
+    },
+    {
+      "task_id": "S03",
+      "cost_usd": 0.001,
+      "tokens": {
+        "input": 5848,
+        "output": 1982,
+        "cache_read": 10752,
+        "cache_write": 0
+      }
+    },
+    {
+      "task_id": "S04",
+      "cost_usd": 0.0005,
+      "tokens": {
+        "input": 2735,
+        "output": 902,
+        "cache_read": 6400,
+        "cache_write": 0
+      }
+    },
+    {
+      "task_id": "S05",
+      "cost_usd": 0.0019,
+      "tokens": {
+        "input": 6611,
+        "output": 2977,
+        "cache_read": 51712,
+        "cache_write": 0
+      }
+    },
+    {
+      "task_id": "S06",
+      "cost_usd": 0.0004,
+      "tokens": {
+        "input": 1833,
+        "output": 906,
+        "cache_read": 6400,
+        "cache_write": 0
+      }
+    },
+    {
+      "task_id": "S07",
+      "cost_usd": 0.002,
+      "tokens": {
+        "input": 7723,
+        "output": 3379,
+        "cache_read": 43264,
+        "cache_write": 0
+      }
+    },
+    {
+      "task_id": "S08",
+      "cost_usd": 0.0042,
+      "tokens": {
+        "input": 15234,
+        "output": 3829,
+        "cache_read": 157952,
+        "cache_write": 0
+      }
+    },
+    {
+      "task_id": "S09",
+      "cost_usd": 0.0024,
+      "tokens": {
+        "input": 15614,
+        "output": 3158,
+        "cache_read": 34560,
+        "cache_write": 0
+      }
+    },
+    {
+      "task_id": "S10",
+      "cost_usd": 0.0089,
+      "tokens": {
+        "input": 20670,
+        "output": 8495,
+        "cache_read": 382720,
+        "cache_write": 0
+      }
+    },
+    {
+      "task_id": "S11",
+      "cost_usd": 0.0032,
+      "tokens": {
+        "input": 16756,
+        "output": 3504,
+        "cache_read": 82688,
+        "cache_write": 0
+      }
+    },
+    {
+      "task_id": "S12",
+      "cost_usd": 0.0025,
+      "tokens": {
+        "input": 13243,
+        "output": 3576,
+        "cache_read": 48128,
+        "cache_write": 0
+      }
+    }
+  ],
+  "total_cost_usd": 0.0288,
+  "total_tokens": 1009154
+}

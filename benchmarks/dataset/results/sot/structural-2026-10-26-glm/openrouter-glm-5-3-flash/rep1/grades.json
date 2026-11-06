@@ -1,0 +1,1046 @@
+[
+  {
+    "task_id": "S06",
+    "arm": "baseline",
+    "coverage": 1.0,
+    "n_facts": 3,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "for root_type in get_root_types():",
+        "reasoning": "Answer explicitly lists get_template as a caller with this call site."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "missing = list(set(get_root_types()) - root_types_added)",
+        "reasoning": "Answer explicitly lists validate_missing_roots as a caller with this call site."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "not in get_root_types() and account.get(\"account_name\"):",
+        "reasoning": "Answer explicitly lists validate_root as a caller with this call site."
+      }
+    ]
+  },
+  {
+    "task_id": "S11",
+    "arm": "baseline",
+    "coverage": 1.0,
+    "n_facts": 8,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "create_item_wise_repost_entries` | `erpnext/controllers/stock_controller.py` | line 827",
+        "reasoning": "Listed as a direct caller with correct file."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "RepostItemValuation.validate_recreate_stock_ledgers` (method of class `RepostItemValuation`) | `erpnext/stock/doctype/repost_item_valuation/repost_item_valuation.py`",
+        "reasoning": "Listed as direct caller with correct file and method."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "_get_directly_dependent_vouchers` | `erpnext/stock/doctype/repost_item_valuation/repost_item_valuation.py`",
+        "reasoning": "Listed as direct caller with correct file."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "covered",
+        "quote": "repost_future_sle` | `erpnext/stock/stock_ledger.py`",
+        "reasoning": "Listed as direct caller with correct file."
+      },
+      {
+        "fact_index": 4,
+        "verdict": "covered",
+        "quote": "RepostItemValuation.validate` (method of class `RepostItemValuation`) | `erpnext/stock/doctype/repost_item_valuation/repost_item_valuation.py` (def at line 92) | line 102 → `self.validate_recreate_stock_ledgers()`",
+        "reasoning": "Correctly identified as second-hop caller calling validate_recreate_stock_ledgers."
+      },
+      {
+        "fact_index": 5,
+        "verdict": "covered",
+        "quote": "repost_gl_entries` | `erpnext/stock/doctype/repost_item_valuation/repost_item_valuation.py` (def at line 642) | line 657 → `_get_directly_dependent_vouchers`",
+        "reasoning": "Correctly identified as second-hop caller calling _get_directly_dependent_vouchers."
+      },
+      {
+        "fact_index": 6,
+        "verdict": "covered",
+        "quote": "repost_sl_entries` | `erpnext/stock/doctype/repost_item_valuation/repost_item_valuation.py` (def at line 615) | lines 617 and 625 → `repost_future_sle`",
+        "reasoning": "Correctly identified as second-hop caller calling repost_future_sle."
+      },
+      {
+        "fact_index": 7,
+        "verdict": "covered",
+        "quote": "StockLedgerService.repost_future_sle_and_gle` (method of class `StockLedgerService`) | `erpnext/stock/services/stock_ledger_service.py` (def at line 219) | line 244 → `create_item_wise_repost_entries`",
+        "reasoning": "Correctly identified as second-hop caller calling create_item_wise_repost_entries."
+      }
+    ]
+  },
+  {
+    "task_id": "S03",
+    "arm": "graphrelay",
+    "coverage": 1.0,
+    "n_facts": 4,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "`ServiceLevelAgreement.after_insert` (method, line 246)",
+        "reasoning": "Candidate lists after_insert as a direct caller in the correct file."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "`ServiceLevelAgreement.on_trash` (method, line 243)",
+        "reasoning": "Candidate lists on_trash as a direct caller in the correct file."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "`ServiceLevelAgreement.on_update` (method, line 249)",
+        "reasoning": "Candidate lists on_update as a direct caller in the correct file."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "covered",
+        "quote": "`get_documents_with_active_service_level_agreement` (module-level function, line 480)",
+        "reasoning": "Candidate lists get_documents_with_active_service_level_agreement as a direct caller in the correct file."
+      }
+    ]
+  },
+  {
+    "task_id": "S05",
+    "arm": "baseline",
+    "coverage": 1.0,
+    "n_facts": 3,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "`get_permission_query_conditions(user, doctype=None)` | line 42 | `get_allowed_companies(user, doctype)`",
+        "reasoning": "States get_permission_query_conditions in the same file calls get_allowed_companies."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "`has_permission(doc, ptype=None, user=None)` | line 62 | `get_allowed_companies(user, doc.doctype)`",
+        "reasoning": "States has_permission in the same file calls get_allowed_companies."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "`validate_allowed_companies(doc)` | line 76 | `get_allowed_companies(frappe.session.user, doc.doctype)`",
+        "reasoning": "States validate_allowed_companies in the same file calls get_allowed_companies."
+      }
+    ]
+  },
+  {
+    "task_id": "S05",
+    "arm": "graphrelay",
+    "coverage": 1.0,
+    "n_facts": 3,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "get_permission_query_conditions(user, doctype=None)` | module-level function (lines 38–58) | line 42 | `get_allowed_companies(user, doctype)",
+        "reasoning": "Candidate lists get_permission_query_conditions in the same file as a caller of get_allowed_companies."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "has_permission(doc, ptype=None, user=None)` | module-level function (lines 61–69) | line 62 | `get_allowed_companies(user, doc.doctype)",
+        "reasoning": "Candidate lists has_permission in the same file as a caller of get_allowed_companies."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "validate_allowed_companies(doc)` | module-level function (lines 72–90) | line 76 | `get_allowed_companies(frappe.session.user, doc.doctype)",
+        "reasoning": "Candidate lists validate_allowed_companies in the same file as a caller of get_allowed_companies."
+      }
+    ]
+  },
+  {
+    "task_id": "S03",
+    "arm": "baseline",
+    "coverage": 1.0,
+    "n_facts": 4,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "**`ServiceLevelAgreement.after_insert`** (method)",
+        "reasoning": "Candidate explicitly lists after_insert as a caller in the same file."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "**`ServiceLevelAgreement.on_trash`** (method of the `ServiceLevelAgreement` Document class)",
+        "reasoning": "Candidate explicitly lists on_trash as a caller in the same file."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "**`ServiceLevelAgreement.on_update`** (method)",
+        "reasoning": "Candidate explicitly lists on_update as a caller in the same file."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "covered",
+        "quote": "**`get_documents_with_active_service_level_agreement`** (module-level function)",
+        "reasoning": "Candidate explicitly lists get_documents_with_active_service_level_agreement as a caller in the same file."
+      }
+    ]
+  },
+  {
+    "task_id": "S08",
+    "arm": "graphrelay",
+    "coverage": 1.0,
+    "n_facts": 6,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "`Bin.recalculate_qty` | `erpnext/stock/doctype/bin/bin.py` | line 56",
+        "reasoning": "Answer lists Bin.recalculate_qty as a direct caller in bin.py."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "`SendToSubcontractorStockEntry._update_reserved_qty_for_subcontracting` | `erpnext/stock/doctype/stock_entry/services/subcontracting.py`",
+        "reasoning": "Answer lists this as a direct caller in the correct file."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "`SubcontractingOrder.update_reserved_qty_for_subcontracting` | `erpnext/subcontracting/doctype/subcontracting_order/subcontracting_order.py`",
+        "reasoning": "Answer lists this as a direct caller in the correct file."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "covered",
+        "quote": "`SubcontractingController.update_ordered_and_reserved_qty` | `erpnext/controllers/subcontracting_controller.py`",
+        "reasoning": "Listed under hop 2 callers of update_reserved_qty_for_subcontracting."
+      },
+      {
+        "fact_index": 4,
+        "verdict": "covered",
+        "quote": "`SendToSubcontractorStockEntry.update_subcontract_order_supplied_items` | `erpnext/stock/doctype/stock_entry/services/subcontracting.py`",
+        "reasoning": "Listed under hop 2 callers of _update_reserved_qty_for_subcontracting."
+      },
+      {
+        "fact_index": 5,
+        "verdict": "covered",
+        "quote": "`SubcontractingOrder.update_status` | `erpnext/subcontracting/doctype/subcontracting_order/subcontracting_order.py`",
+        "reasoning": "Listed under hop 2 callers of update_reserved_qty_for_subcontracting."
+      }
+    ]
+  },
+  {
+    "task_id": "S01",
+    "arm": "graphrelay",
+    "coverage": 1.0,
+    "n_facts": 3,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "`apply_price_list` | line 1621",
+        "reasoning": "Answer lists apply_price_list in erpnext/stock/get_item_details.py as a direct caller of _preprocess_ctx."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "`calculate_service_end_date` | line 906",
+        "reasoning": "Answer lists calculate_service_end_date in the same file as a direct caller."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "`get_item_details` | line 85",
+        "reasoning": "Answer lists get_item_details as a direct caller in the same file."
+      }
+    ]
+  },
+  {
+    "task_id": "S08",
+    "arm": "baseline",
+    "coverage": 1.0,
+    "n_facts": 6,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "`Bin.recalculate_qty` | `erpnext/stock/doctype/bin/bin.py` | line 56 (`self.update_reserved_qty_for_sub_contracting(update_qty=False)`)",
+        "reasoning": "Answer lists Bin.recalculate_qty in bin.py as a direct caller with the exact call site."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "`SendToSubcontractorStockEntry._update_reserved_qty_for_subcontracting` | `erpnext/stock/doctype/stock_entry/services/subcontracting.py` | line 211 (`stock_bin.update_reserved_qty_for_sub_contracting()`)",
+        "reasoning": "Answer lists this function in the correct file as a direct caller."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "`SubcontractingOrder.update_reserved_qty_for_subcontracting` | `erpnext/subcontracting/doctype/subcontracting_order/subcontracting_order.py` | line 236 (`stock_bin.update_reserved_qty_for_sub_contracting()`)",
+        "reasoning": "Answer lists this function in the correct file as a direct caller."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "covered",
+        "quote": "`SubcontractingController.update_ordered_and_reserved_qty` — `erpnext/controllers/subcontracting_controller.py` (def at line 1144, call at line 1161: `sco_doc.update_reserved_qty_for_subcontracting(sco_item_rows)`",
+        "reasoning": "Answer correctly identifies this as a second-hop caller calling the direct caller SubcontractingOrder.update_reserved_qty_for_subcontracting."
+      },
+      {
+        "fact_index": 4,
+        "verdict": "covered",
+        "quote": "`SendToSubcontractorStockEntry.update_subcontract_order_supplied_items` — `erpnext/stock/doctype/stock_entry/services/subcontracting.py` (def at line 172, call at line 178)",
+        "reasoning": "Answer identifies this as a second-hop caller of the direct caller _update_reserved_qty_for_subcontracting."
+      },
+      {
+        "fact_index": 5,
+        "verdict": "covered",
+        "quote": "`SubcontractingOrder.update_status` — `erpnext/subcontracting/doctype/subcontracting_order/subcontracting_order.py` (def at line 300, call at line 332, gated by `update_bin`)",
+        "reasoning": "Answer identifies this as a second-hop caller of update_reserved_qty_for_subcontracting."
+      }
+    ]
+  },
+  {
+    "task_id": "S09",
+    "arm": "graphrelay",
+    "coverage": 1.0,
+    "n_facts": 6,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "`calculate_first_response_time` (line 320) | lines 330, 364, 373",
+        "reasoning": "Answer explicitly lists calculate_first_response_time as a direct caller of get_working_hours in issue.py."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "`calculate_initial_frt` (line 418) | line 423",
+        "reasoning": "Answer lists calculate_initial_frt as a direct caller of get_working_hours."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "`is_before_working_hours` (line 429) | line 430",
+        "reasoning": "Answer lists is_before_working_hours as a direct caller of get_working_hours."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "covered",
+        "quote": "`is_during_working_hours` (line 406) | line 407",
+        "reasoning": "Answer lists is_during_working_hours as a direct caller of get_working_hours."
+      },
+      {
+        "fact_index": 4,
+        "verdict": "covered",
+        "quote": "`set_first_response_time(communication, method)` | `erpnext/support/doctype/issue/issue.py` (line 303, calls at line 307) | `calculate_first_response_time`",
+        "reasoning": "Answer lists set_first_response_time in issue.py as a second-hop caller calling calculate_first_response_time."
+      },
+      {
+        "fact_index": 5,
+        "verdict": "covered",
+        "quote": "`set_first_response()` | `erpnext/support/doctype/service_level_agreement/service_level_agreement.py` (defined at line 561, calls at line 565) | `calculate_first_response_time`",
+        "reasoning": "Answer identifies set_first_response in service_level_agreement.py as a second-hop caller, and separately notes it is nested inside handle_status_change, matching the gold fact's qualified name."
+      }
+    ]
+  },
+  {
+    "task_id": "S04",
+    "arm": "graphrelay",
+    "coverage": 1.0,
+    "n_facts": 7,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "**`ExpenseAccountService.set_expense_account`** (method) — call at line 145",
+        "reasoning": "Matches file, class, and method exactly."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "**`Asset.get_fixed_asset_account`** (method) — call at line 909",
+        "reasoning": "Matches file, class, and method exactly."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "**`get_asset_account`** (module-level function) — **two** call sites: lines 1142 and 1147",
+        "reasoning": "Matches function and file exactly."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "covered",
+        "quote": "**`AssetCapitalization.get_target_account`** (method) — call at line 408",
+        "reasoning": "Matches file, class, and method exactly."
+      },
+      {
+        "fact_index": 4,
+        "verdict": "covered",
+        "quote": "**`get_consumed_asset_details`** (module-level function) — call at line 631",
+        "reasoning": "Matches function and file exactly."
+      },
+      {
+        "fact_index": 5,
+        "verdict": "covered",
+        "quote": "**`get_target_asset_details`** (module-level function) — call at line 530",
+        "reasoning": "Matches function and file exactly."
+      },
+      {
+        "fact_index": 6,
+        "verdict": "covered",
+        "quote": "**`get_basic_details`** (module-level function) — imported locally at line 445, call at line 447",
+        "reasoning": "Matches function and file exactly."
+      }
+    ]
+  },
+  {
+    "task_id": "S10",
+    "arm": "baseline",
+    "coverage": 1.0,
+    "n_facts": 10,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "`EmailDigest.get_type_balance(self, fieldname, account_type, root_type=None)` | method | line 650",
+        "reasoning": "Answer lists get_type_balance as a direct caller of get_count_on."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "`EmailDigest.get_year_to_date_balance(self, root_type, fieldname)` | method | line 422",
+        "reasoning": "Answer lists get_year_to_date_balance as a direct caller of get_count_on."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "`get_count_for_period(account, fieldname, from_date, to_date)` | module-level function | lines 986, 987, 995",
+        "reasoning": "Answer lists get_count_for_period as a direct caller of get_count_on."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "covered",
+        "quote": "`EmailDigest.get_bank_balance(self)` | erpnext/setup/doctype/email_digest/email_digest.py | line 444",
+        "reasoning": "Listed under callers of get_type_balance, a direct caller, making it a two-hop caller."
+      },
+      {
+        "fact_index": 4,
+        "verdict": "covered",
+        "quote": "`EmailDigest.get_credit_balance(self)` | erpnext/setup/doctype/email_digest/email_digest.py | line 448",
+        "reasoning": "Listed under callers of get_type_balance, a direct caller, making it a two-hop caller."
+      },
+      {
+        "fact_index": 5,
+        "verdict": "covered",
+        "quote": "`EmailDigest.get_expense_year_to_date(self)` | erpnext/setup/doctype/email_digest/email_digest.py | line 412",
+        "reasoning": "Listed under callers of get_year_to_date_balance, a direct caller, making it a two-hop caller."
+      },
+      {
+        "fact_index": 6,
+        "verdict": "covered",
+        "quote": "`EmailDigest.get_income_year_to_date(self)` | erpnext/setup/doctype/email_digest/email_digest.py | line 408",
+        "reasoning": "Listed under callers of get_year_to_date_balance, a direct caller, making it a two-hop caller."
+      },
+      {
+        "fact_index": 7,
+        "verdict": "covered",
+        "quote": "`EmailDigest.get_invoiced_amount(self)` | erpnext/setup/doctype/email_digest/email_digest.py | line 454",
+        "reasoning": "Listed under callers of get_type_balance, a direct caller, making it a two-hop caller."
+      },
+      {
+        "fact_index": 8,
+        "verdict": "covered",
+        "quote": "`EmailDigest.get_payables(self)` | erpnext/setup/doctype/email_digest/email_digest.py | line 451",
+        "reasoning": "Listed under callers of get_type_balance, a direct caller, making it a two-hop caller."
+      },
+      {
+        "fact_index": 9,
+        "verdict": "covered",
+        "quote": "`EmailDigest.get_period_amounts(self, accounts, fieldname)` | erpnext/setup/doctype/email_digest/email_digest.py | line 484",
+        "reasoning": "Listed under callers of get_count_for_period, a direct caller, making it a two-hop caller."
+      }
+    ]
+  },
+  {
+    "task_id": "S11",
+    "arm": "graphrelay",
+    "coverage": 1.0,
+    "n_facts": 8,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "`create_item_wise_repost_entries` | line 827 |",
+        "reasoning": "Listed as a direct caller of get_items_to_be_repost in stock_controller.py."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "`RepostItemValuation.validate_recreate_stock_ledgers` (method) | line 135 |",
+        "reasoning": "Listed as a direct caller in repost_item_valuation.py."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "`_get_directly_dependent_vouchers` | line 702 |",
+        "reasoning": "Listed as a direct caller in repost_item_valuation.py."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "covered",
+        "quote": "`repost_future_sle` | line 314 |",
+        "reasoning": "Listed as a direct caller in stock_ledger.py."
+      },
+      {
+        "fact_index": 4,
+        "verdict": "covered",
+        "quote": "`RepostItemValuation.validate` (method, line 92) | `validate_recreate_stock_ledgers` — calls `self.validate_recreate_stock_ledgers()` at line 102 |",
+        "reasoning": "Listed as a hop-2 caller invoking validate_recreate_stock_ledgers."
+      },
+      {
+        "fact_index": 5,
+        "verdict": "covered",
+        "quote": "`repost_gl_entries` (line 642) | `_get_directly_dependent_vouchers` — calls it at line 657 |",
+        "reasoning": "Listed as a hop-2 caller invoking _get_directly_dependent_vouchers."
+      },
+      {
+        "fact_index": 6,
+        "verdict": "covered",
+        "quote": "`repost_sl_entries` (line 615) | `repost_future_sle` — calls it at lines 617 and 625 |",
+        "reasoning": "Listed as a hop-2 caller invoking repost_future_sle."
+      },
+      {
+        "fact_index": 7,
+        "verdict": "covered",
+        "quote": "`StockLedgerService.repost_future_sle_and_gle` (method, line 219) | `create_item_wise_repost_entries` — calls it at line 244 |",
+        "reasoning": "Listed as a hop-2 caller invoking create_item_wise_repost_entries."
+      }
+    ]
+  },
+  {
+    "task_id": "S04",
+    "arm": "baseline",
+    "coverage": 0.0,
+    "n_facts": 7,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "missing",
+        "quote": "",
+        "reasoning": "Answer is empty."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "missing",
+        "quote": "",
+        "reasoning": "Answer is empty."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "missing",
+        "quote": "",
+        "reasoning": "Answer is empty."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "missing",
+        "quote": "",
+        "reasoning": "Answer is empty."
+      },
+      {
+        "fact_index": 4,
+        "verdict": "missing",
+        "quote": "",
+        "reasoning": "Answer is empty."
+      },
+      {
+        "fact_index": 5,
+        "verdict": "missing",
+        "quote": "",
+        "reasoning": "Answer is empty."
+      },
+      {
+        "fact_index": 6,
+        "verdict": "missing",
+        "quote": "",
+        "reasoning": "Answer is empty."
+      }
+    ]
+  },
+  {
+    "task_id": "S07",
+    "arm": "graphrelay",
+    "coverage": 1.0,
+    "n_facts": 13,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "`BankStatementImportLog.set_closing_balance` | line 319: `self.closing_balance = get_float_amount(closing_balance)`",
+        "reasoning": "Candidate lists set_closing_balance as a direct caller with the exact call site."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "`BankStatementImportLog.set_pdf_summary` | line 476 |",
+        "reasoning": "Candidate lists set_pdf_summary as a direct caller."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "`parse_amount` — a nested function defined inside `compute_final_transactions` (def at line 824) | lines 826, 834, 841, 849, 857, 865",
+        "reasoning": "Candidate identifies parse_amount nested in compute_final_transactions as a direct caller, matching the gold fact's naming convention."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "covered",
+        "quote": "`extract_transaction_rows` (module-level) | lines 793–795",
+        "reasoning": "Candidate lists extract_transaction_rows as a direct caller."
+      },
+      {
+        "fact_index": 4,
+        "verdict": "covered",
+        "quote": "`guess_column_mapping_by_content` (module-level) | line 700",
+        "reasoning": "Candidate lists guess_column_mapping_by_content as a direct caller."
+      },
+      {
+        "fact_index": 5,
+        "verdict": "covered",
+        "quote": "`BankStatementImportLog.apply_pdf_tables` | `set_pdf_summary` | line 486 |",
+        "reasoning": "Candidate lists apply_pdf_tables as a second-hop caller via set_pdf_summary."
+      },
+      {
+        "fact_index": 6,
+        "verdict": "covered",
+        "quote": "`BankStatementImportLog.before_insert` | `set_pdf_summary` | line 103 |",
+        "reasoning": "Candidate lists before_insert as a second-hop caller via set_pdf_summary."
+      },
+      {
+        "fact_index": 7,
+        "verdict": "covered",
+        "quote": "`BankStatementImportLog.get_transaction_rows` | `extract_transaction_rows` | line 286 |",
+        "reasoning": "Candidate lists get_transaction_rows as a second-hop caller via extract_transaction_rows."
+      },
+      {
+        "fact_index": 8,
+        "verdict": "covered",
+        "quote": "`BankStatementImportLog.prepare_pdf_tables` | `guess_column_mapping_by_content` | line 375 |",
+        "reasoning": "Candidate lists prepare_pdf_tables as a second-hop caller via guess_column_mapping_by_content."
+      },
+      {
+        "fact_index": 9,
+        "verdict": "covered",
+        "quote": "`BankStatementImportLog.recompute_properties` | `set_closing_balance` | line 140 |",
+        "reasoning": "Candidate lists recompute_properties as a second-hop caller via set_closing_balance."
+      },
+      {
+        "fact_index": 10,
+        "verdict": "covered",
+        "quote": "`build_table_transactions` (module-level) | `extract_transaction_rows` | line 905 |",
+        "reasoning": "Candidate lists build_table_transactions as a second-hop caller via extract_transaction_rows."
+      },
+      {
+        "fact_index": 11,
+        "verdict": "covered",
+        "quote": "`compute_final_transactions` (module-level) | `parse_amount` (its own nested closure) | line 881 |",
+        "reasoning": "Candidate lists compute_final_transactions as a second-hop caller via parse_amount."
+      },
+      {
+        "fact_index": 12,
+        "verdict": "covered",
+        "quote": "`reextract_pdf_table` (module-level whitelisted API) | `guess_column_mapping_by_content` | line 1238 |",
+        "reasoning": "Candidate lists reextract_pdf_table as a second-hop caller via guess_column_mapping_by_content."
+      }
+    ]
+  },
+  {
+    "task_id": "S07",
+    "arm": "baseline",
+    "coverage": 0.8077,
+    "n_facts": 13,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "`BankStatementImportLog.set_closing_balance` (method, line 288)",
+        "reasoning": "Answer explicitly lists set_closing_balance as a direct caller of get_float_amount."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "`BankStatementImportLog.set_pdf_summary` (method, line 427)",
+        "reasoning": "Answer explicitly lists set_pdf_summary as a direct caller of get_float_amount."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "`parse_amount` (nested function defined at line 824 **inside** `compute_final_transactions`, line 820)",
+        "reasoning": "Answer identifies parse_amount nested in compute_final_transactions as a direct caller of get_float_amount."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "missing",
+        "quote": "",
+        "reasoning": "extract_transaction_rows is never mentioned anywhere in the answer."
+      },
+      {
+        "fact_index": 4,
+        "verdict": "covered",
+        "quote": "`guess_column_mapping_by_content` (module-level, line 683)",
+        "reasoning": "Answer explicitly lists guess_column_mapping_by_content as a direct caller of get_float_amount."
+      },
+      {
+        "fact_index": 5,
+        "verdict": "covered",
+        "quote": "`BankStatementImportLog.apply_pdf_tables` (method, line 480) | `set_pdf_summary`",
+        "reasoning": "Answer lists apply_pdf_tables as a hop-2 caller via set_pdf_summary, a direct caller."
+      },
+      {
+        "fact_index": 6,
+        "verdict": "covered",
+        "quote": "`BankStatementImportLog.before_insert` (method, line 100) | `set_pdf_summary`",
+        "reasoning": "Answer lists before_insert as a hop-2 caller via set_pdf_summary."
+      },
+      {
+        "fact_index": 7,
+        "verdict": "missing",
+        "quote": "",
+        "reasoning": "get_transaction_rows is never mentioned anywhere in the answer's hop-2 list or elsewhere."
+      },
+      {
+        "fact_index": 8,
+        "verdict": "covered",
+        "quote": "`BankStatementImportLog.prepare_pdf_tables` (method, line 342) | `guess_column_mapping_by_content`",
+        "reasoning": "Answer lists prepare_pdf_tables as a hop-2 caller via guess_column_mapping_by_content."
+      },
+      {
+        "fact_index": 9,
+        "verdict": "covered",
+        "quote": "`BankStatementImportLog.recompute_properties` (method, line 120) | `set_closing_balance`",
+        "reasoning": "Answer lists recompute_properties as a hop-2 caller via set_closing_balance."
+      },
+      {
+        "fact_index": 10,
+        "verdict": "partial",
+        "quote": "`build_table_transactions` (module-level, line 894) — calls `compute_final_transactions` at line 909",
+        "reasoning": "build_table_transactions is named as a two-hop affected function only under a hedged alternate interpretation, not in the main confident hop-2 table."
+      },
+      {
+        "fact_index": 11,
+        "verdict": "covered",
+        "quote": "`compute_final_transactions` (module-level, line 820) | `parse_amount` (the nested closure it defines) | line 881",
+        "reasoning": "Answer lists compute_final_transactions as a hop-2 caller since it invokes the nested parse_amount function."
+      },
+      {
+        "fact_index": 12,
+        "verdict": "covered",
+        "quote": "`reextract_pdf_table` (module-level whitelisted API, line 1200) | `guess_column_mapping_by_content`",
+        "reasoning": "Answer lists reextract_pdf_table as a hop-2 caller via guess_column_mapping_by_content."
+      }
+    ]
+  },
+  {
+    "task_id": "S01",
+    "arm": "baseline",
+    "coverage": 1.0,
+    "n_facts": 3,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "**`apply_price_list(ctx, as_doc=False, doc=None)`** — calls `_preprocess_ctx(ctx)`",
+        "reasoning": "Answer explicitly states apply_price_list calls _preprocess_ctx."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "**`calculate_service_end_date(ctx, item=None)`** — calls `_preprocess_ctx(ctx)`",
+        "reasoning": "Answer explicitly states calculate_service_end_date calls _preprocess_ctx."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "**`get_item_details(ctx, doc=None, for_validate=False, overwrite_warehouse=True)`** — calls `_preprocess_ctx(ctx)`",
+        "reasoning": "Answer explicitly states get_item_details calls _preprocess_ctx."
+      }
+    ]
+  },
+  {
+    "task_id": "S09",
+    "arm": "baseline",
+    "coverage": 1.0,
+    "n_facts": 6,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "calculate_first_response_time(issue, first_responded_on)` | lines 330, 364, 373",
+        "reasoning": "Listed as a direct caller of get_working_hours in the table."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "calculate_initial_frt(issue_creation_date, days_in_between, support_hours)` | line 423",
+        "reasoning": "Listed as a direct caller of get_working_hours in the table."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "is_before_working_hours(date, support_hours)` | line 430",
+        "reasoning": "Listed as a direct caller of get_working_hours in the table."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "covered",
+        "quote": "is_during_working_hours(date, support_hours)` | line 407",
+        "reasoning": "Listed as a direct caller of get_working_hours in the table."
+      },
+      {
+        "fact_index": 4,
+        "verdict": "covered",
+        "quote": "**`set_first_response_time(communication, method)`** (line 303) — calls direct caller `calculate_first_response_time` at line 307",
+        "reasoning": "Correctly identifies set_first_response_time as a second-hop caller via calculate_first_response_time."
+      },
+      {
+        "fact_index": 5,
+        "verdict": "covered",
+        "quote": "**`set_first_response()`** — a nested function inside **`handle_status_change(doc, apply_sla_for_resolution)`**",
+        "reasoning": "Correctly identifies the nested set_first_response inside handle_status_change as a second-hop caller via calculate_first_response_time."
+      }
+    ]
+  },
+  {
+    "task_id": "S12",
+    "arm": "baseline",
+    "coverage": 1.0,
+    "n_facts": 5,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "`FixedAssetService._restore_asset` (method of `FixedAssetService`)",
+        "reasoning": "Answer explicitly lists this as a direct caller with file and call line."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "`restore_asset` (module-level, `@frappe.whitelist()`) | `erpnext/assets/doctype/asset/depreciation.py`",
+        "reasoning": "Answer explicitly lists restore_asset in depreciation.py as a direct caller."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "`AssetCapitalization.restore_consumed_asset_items` (method of `AssetCapitalization`) | `erpnext/assets/doctype/asset_capitalization/asset_capitalization.py`",
+        "reasoning": "Answer explicitly lists this as a direct caller with correct file."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "covered",
+        "quote": "**`FixedAssetService.process_asset_depreciation`** — `erpnext/accounts/doctype/sales_invoice/services/fixed_assets.py:62`, which calls `self._restore_asset()` at line 70",
+        "reasoning": "Answer identifies this as a second-hop caller of the direct caller _restore_asset."
+      },
+      {
+        "fact_index": 4,
+        "verdict": "covered",
+        "quote": "**`AssetCapitalization.on_cancel`** — `erpnext/assets/doctype/asset_capitalization/asset_capitalization.py:116`, which calls `self.restore_consumed_asset_items()` at line 128",
+        "reasoning": "Answer identifies this as a second-hop caller of restore_consumed_asset_items."
+      }
+    ]
+  },
+  {
+    "task_id": "S10",
+    "arm": "graphrelay",
+    "coverage": 1.0,
+    "n_facts": 10,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "`EmailDigest.get_type_balance` | method (line 624) | line 650: `count += get_count_on(account, fieldname, date=self.future_to_date)`",
+        "reasoning": "Table lists get_type_balance as a direct caller with call site."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "`EmailDigest.get_year_to_date_balance` | method (line 414) | line 422: `count += get_count_on(account, fieldname, date=self.future_to_date)`",
+        "reasoning": "Table lists get_year_to_date_balance as a direct caller."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "`get_count_for_period` | module-level function (line 984) | lines 986, 987, 995",
+        "reasoning": "Table lists get_count_for_period as a direct caller."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "covered",
+        "quote": "`EmailDigest.get_bank_balance` (line 442) — `(\"bank_balance\", \"Bank\", root_type=\"Asset\")`",
+        "reasoning": "Listed under second-hop callers via get_type_balance."
+      },
+      {
+        "fact_index": 4,
+        "verdict": "covered",
+        "quote": "`EmailDigest.get_credit_balance` (line 446) — `(\"credit_balance\", \"Bank\", root_type=\"Liability\")`",
+        "reasoning": "Listed under second-hop callers via get_type_balance."
+      },
+      {
+        "fact_index": 5,
+        "verdict": "covered",
+        "quote": "`EmailDigest.get_expense_year_to_date` (line 410) — calls it with `(\"expense\", \"expenses_booked\")`",
+        "reasoning": "Listed under second-hop callers via get_year_to_date_balance."
+      },
+      {
+        "fact_index": 6,
+        "verdict": "covered",
+        "quote": "`EmailDigest.get_income_year_to_date` (line 406) — calls it with `(\"income\", \"income\")`",
+        "reasoning": "Listed under second-hop callers via get_year_to_date_balance."
+      },
+      {
+        "fact_index": 7,
+        "verdict": "covered",
+        "quote": "`EmailDigest.get_invoiced_amount` (line 453) — `(\"invoiced_amount\", \"Receivable\")`",
+        "reasoning": "Listed under second-hop callers via get_type_balance."
+      },
+      {
+        "fact_index": 8,
+        "verdict": "covered",
+        "quote": "`EmailDigest.get_payables` (line 450) — `(\"payables\", \"Payable\")`",
+        "reasoning": "Listed under second-hop callers via get_type_balance."
+      },
+      {
+        "fact_index": 9,
+        "verdict": "covered",
+        "quote": "`EmailDigest.get_period_amounts` (line 477) — calls `get_count_for_period` at line 484 inside its per-account loop",
+        "reasoning": "Listed under second-hop callers via get_count_for_period."
+      }
+    ]
+  },
+  {
+    "task_id": "S02",
+    "arm": "graphrelay",
+    "coverage": 1.0,
+    "n_facts": 3,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "**`POSInvoice.validate_stock_availablility`** (method; note the misspelled name in the codebase) | `erpnext/accounts/doctype/pos_invoice/pos_invoice.py",
+        "reasoning": "Candidate correctly identifies this method and file as a direct caller."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "**`get_items`** (module-level function, def at line 135) | `erpnext/selling/page/point_of_sale/point_of_sale.py`",
+        "reasoning": "Candidate correctly identifies get_items in point_of_sale.py as a caller."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "**`search_by_term`** (module-level function) | `erpnext/selling/page/point_of_sale/point_of_sale.py`",
+        "reasoning": "Candidate correctly identifies search_by_term in point_of_sale.py as a caller."
+      }
+    ]
+  },
+  {
+    "task_id": "S12",
+    "arm": "graphrelay",
+    "coverage": 1.0,
+    "n_facts": 5,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "`FixedAssetService._restore_asset(self)` | `erpnext/accounts/doctype/sales_invoice/services/fixed_assets.py`",
+        "reasoning": "Answer lists this function as a direct caller of reset_depreciation_schedule."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "`restore_asset(asset_name)` | `erpnext/assets/doctype/asset/depreciation.py`",
+        "reasoning": "Answer lists restore_asset as a direct caller in depreciation.py."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "`AssetCapitalization.restore_consumed_asset_items(self)` | `erpnext/assets/doctype/asset_capitalization/asset_capitalization.py`",
+        "reasoning": "Answer lists this method as a direct caller."
+      },
+      {
+        "fact_index": 3,
+        "verdict": "covered",
+        "quote": "`FixedAssetService.process_asset_depreciation(self)` — `erpnext/accounts/doctype/sales_invoice/services/fixed_assets.py` (lines 62–72), calls `self._restore_asset()`",
+        "reasoning": "Answer identifies this function as a second-hop caller via _restore_asset."
+      },
+      {
+        "fact_index": 4,
+        "verdict": "covered",
+        "quote": "`AssetCapitalization.on_cancel(self)` — `erpnext/assets/doctype/asset_capitalization/asset_capitalization.py` (lines 116–129), calls `self.restore_consumed_asset_items()`",
+        "reasoning": "Answer identifies on_cancel as a second-hop caller via restore_consumed_asset_items."
+      }
+    ]
+  },
+  {
+    "task_id": "S06",
+    "arm": "graphrelay",
+    "coverage": 1.0,
+    "n_facts": 3,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "**`get_template`** (module-level function) | Line 343",
+        "reasoning": "Answer explicitly lists get_template as a caller of get_root_types."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "**`validate_missing_roots`** (module-level function) | Line 419",
+        "reasoning": "Answer explicitly lists validate_missing_roots as a caller of get_root_types."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "**`validate_root`** (module-level function) | Line 403",
+        "reasoning": "Answer explicitly lists validate_root as a caller of get_root_types."
+      }
+    ]
+  },
+  {
+    "task_id": "S02",
+    "arm": "baseline",
+    "coverage": 1.0,
+    "n_facts": 3,
+    "verdicts": [
+      {
+        "fact_index": 0,
+        "verdict": "covered",
+        "quote": "**`POSInvoice.validate_stock_availablility`** (method of class `POSInvoice`)",
+        "reasoning": "Candidate explicitly lists this method as a direct caller with file path."
+      },
+      {
+        "fact_index": 1,
+        "verdict": "covered",
+        "quote": "**`get_items`** (module-level, `@frappe.whitelist()`)",
+        "reasoning": "Candidate lists get_items in point_of_sale.py as a direct caller."
+      },
+      {
+        "fact_index": 2,
+        "verdict": "covered",
+        "quote": "**`search_by_term`** (module-level function)",
+        "reasoning": "Candidate lists search_by_term in point_of_sale.py as a direct caller."
+      }
+    ]
+  }
+]

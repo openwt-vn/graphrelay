@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "codegraph-colby": {
+      "type": "stdio",
+      "command": "__HOME__/.colby-codegraph/bin/codegraph",
+      "args": [
+        "serve",
+        "--mcp",
+        "--path",
+        "__ERPNEXT_COLBY__"
+      ]
+    }
+  }
+}

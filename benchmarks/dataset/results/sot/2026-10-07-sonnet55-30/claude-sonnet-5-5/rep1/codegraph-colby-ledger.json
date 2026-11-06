@@ -1,0 +1,317 @@
+{
+  "arm": "codegraph-colby",
+  "provider": "claude-sonnet-5-5",
+  "model": "claude-sonnet-5-5",
+  "base_url": null,
+  "pricing": {
+    "in": 3.0,
+    "out": 15.0,
+    "cache_read": 0.3,
+    "cache_write": 3.75
+  },
+  "max_turns": 30,
+  "runs": [
+    {
+      "task_id": "Q01",
+      "cost_usd": 0.2189,
+      "tokens": {
+        "input": 16,
+        "output": 5329,
+        "cache_read": 127624,
+        "cache_write": 26844
+      }
+    },
+    {
+      "task_id": "Q02",
+      "cost_usd": 0.1843,
+      "tokens": {
+        "input": 14,
+        "output": 5512,
+        "cache_read": 91087,
+        "cache_write": 19806
+      }
+    },
+    {
+      "task_id": "Q03",
+      "cost_usd": 0.1551,
+      "tokens": {
+        "input": 12,
+        "output": 3917,
+        "cache_read": 79665,
+        "cache_write": 19309
+      }
+    },
+    {
+      "task_id": "Q04",
+      "cost_usd": 0.0966,
+      "tokens": {
+        "input": 8,
+        "output": 1863,
+        "cache_read": 42852,
+        "cache_write": 14871
+      }
+    },
+    {
+      "task_id": "Q05",
+      "cost_usd": 0.1041,
+      "tokens": {
+        "input": 8,
+        "output": 1939,
+        "cache_read": 41590,
+        "cache_write": 16668
+      }
+    },
+    {
+      "task_id": "Q06",
+      "cost_usd": 0.1535,
+      "tokens": {
+        "input": 8,
+        "output": 3914,
+        "cache_read": 43797,
+        "cache_write": 21763
+      }
+    },
+    {
+      "task_id": "Q07",
+      "cost_usd": 0.065,
+      "tokens": {
+        "input": 6,
+        "output": 843,
+        "cache_read": 21530,
+        "cache_write": 12222
+      }
+    },
+    {
+      "task_id": "Q08",
+      "cost_usd": 0.0749,
+      "tokens": {
+        "input": 6,
+        "output": 1211,
+        "cache_read": 23762,
+        "cache_write": 13233
+      }
+    },
+    {
+      "task_id": "Q09",
+      "cost_usd": 0.0821,
+      "tokens": {
+        "input": 6,
+        "output": 1316,
+        "cache_read": 24203,
+        "cache_write": 14701
+      }
+    },
+    {
+      "task_id": "Q10",
+      "cost_usd": 0.0892,
+      "tokens": {
+        "input": 6,
+        "output": 2111,
+        "cache_read": 24068,
+        "cache_write": 13401
+      }
+    },
+    {
+      "task_id": "Q11",
+      "cost_usd": 0.1276,
+      "tokens": {
+        "input": 12,
+        "output": 2215,
+        "cache_read": 75866,
+        "cache_write": 19080
+      }
+    },
+    {
+      "task_id": "Q12",
+      "cost_usd": 0.0927,
+      "tokens": {
+        "input": 8,
+        "output": 1477,
+        "cache_read": 41170,
+        "cache_write": 15521
+      }
+    },
+    {
+      "task_id": "Q13",
+      "cost_usd": 0.2057,
+      "tokens": {
+        "input": 14,
+        "output": 4167,
+        "cache_read": 126644,
+        "cache_write": 28036
+      }
+    },
+    {
+      "task_id": "Q14",
+      "cost_usd": 0.0803,
+      "tokens": {
+        "input": 4,
+        "output": 2100,
+        "cache_read": 8298,
+        "cache_write": 12352
+      }
+    },
+    {
+      "task_id": "Q15",
+      "cost_usd": 0.1533,
+      "tokens": {
+        "input": 12,
+        "output": 3245,
+        "cache_read": 74499,
+        "cache_write": 21922
+      }
+    },
+    {
+      "task_id": "Q16",
+      "cost_usd": 0.0818,
+      "tokens": {
+        "input": 8,
+        "output": 1129,
+        "cache_read": 40869,
+        "cache_write": 14034
+      }
+    },
+    {
+      "task_id": "Q17",
+      "cost_usd": 0.072,
+      "tokens": {
+        "input": 4,
+        "output": 1485,
+        "cache_read": 8352,
+        "cache_write": 12587
+      }
+    },
+    {
+      "task_id": "Q18",
+      "cost_usd": 0.0639,
+      "tokens": {
+        "input": 4,
+        "output": 1105,
+        "cache_read": 8291,
+        "cache_write": 11956
+      }
+    },
+    {
+      "task_id": "Q19",
+      "cost_usd": 0.1243,
+      "tokens": {
+        "input": 12,
+        "output": 1945,
+        "cache_read": 70997,
+        "cache_write": 19679
+      }
+    },
+    {
+      "task_id": "Q20",
+      "cost_usd": 0.1759,
+      "tokens": {
+        "input": 12,
+        "output": 3198,
+        "cache_read": 86172,
+        "cache_write": 27209
+      }
+    },
+    {
+      "task_id": "Q21",
+      "cost_usd": 0.0637,
+      "tokens": {
+        "input": 4,
+        "output": 1032,
+        "cache_read": 8285,
+        "cache_write": 12184
+      }
+    },
+    {
+      "task_id": "Q22",
+      "cost_usd": 0.1021,
+      "tokens": {
+        "input": 8,
+        "output": 1714,
+        "cache_read": 40377,
+        "cache_write": 17123
+      }
+    },
+    {
+      "task_id": "Q23",
+      "cost_usd": 0.1695,
+      "tokens": {
+        "input": 14,
+        "output": 2934,
+        "cache_read": 104169,
+        "cache_write": 25122
+      }
+    },
+    {
+      "task_id": "Q24",
+      "cost_usd": 0.1107,
+      "tokens": {
+        "input": 8,
+        "output": 2469,
+        "cache_read": 41006,
+        "cache_write": 16364
+      }
+    },
+    {
+      "task_id": "Q25",
+      "cost_usd": 0.0901,
+      "tokens": {
+        "input": 6,
+        "output": 1925,
+        "cache_read": 22632,
+        "cache_write": 14518
+      }
+    },
+    {
+      "task_id": "Q26",
+      "cost_usd": 0.1114,
+      "tokens": {
+        "input": 10,
+        "output": 1814,
+        "cache_read": 62231,
+        "cache_write": 17465
+      }
+    },
+    {
+      "task_id": "Q27",
+      "cost_usd": 0.0708,
+      "tokens": {
+        "input": 6,
+        "output": 1118,
+        "cache_read": 23476,
+        "cache_write": 12534
+      }
+    },
+    {
+      "task_id": "Q28",
+      "cost_usd": 0.1087,
+      "tokens": {
+        "input": 10,
+        "output": 2079,
+        "cache_read": 59661,
+        "cache_write": 15885
+      }
+    },
+    {
+      "task_id": "Q29",
+      "cost_usd": 0.068,
+      "tokens": {
+        "input": 10,
+        "output": 1508,
+        "cache_read": 37140,
+        "cache_write": 9133
+      }
+    },
+    {
+      "task_id": "Q30",
+      "cost_usd": 0.0595,
+      "tokens": {
+        "input": 4,
+        "output": 798,
+        "cache_read": 8274,
+        "cache_write": 11998
+      }
+    }
+  ],
+  "total_cost_usd": 3.3557,
+  "total_tokens": 2043779
+}

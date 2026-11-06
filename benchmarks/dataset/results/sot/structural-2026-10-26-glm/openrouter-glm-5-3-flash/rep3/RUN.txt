@@ -1,0 +1,5 @@
+graphrelay: release build of fd1ae98+dirty
+repo: erpnext pin: 1887825ce5c6fe2fbd5366ab52e4c73de24d23fa
+questions: S01,S02,S03,S04,S05,S06,S07,S08,S09,S10,S11,S12
+model: openrouter-glm-5-3-flash
+arms: graphrelay baseline

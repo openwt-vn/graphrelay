@@ -1,0 +1,12 @@
+-- Content-format bump, not a schema change: Plan 24 item 3.3 — the decomposed/
+-- stemmed tokens appended to each chunk's indexed text now exclude words already
+-- present verbatim (they used to double every uninflected word's term frequency and
+-- the document length), and callers/callees are listed in a stable order.
+--
+-- Deliberately NO `DELETE FROM chunk_fts`: this migration is listed in
+-- FTS_REBUILD_TRIGGERS, so every file is reset to pending and re-chunked, and
+-- `INSERT OR REPLACE` by rowid overwrites each row as its file is rebuilt (rows of
+-- removed symbols go with their symbols). Emptying the table would leave lexical
+-- search returning nothing for the whole re-index, while `watch_status` already
+-- reports fresh; the old-format rows are a fine stopgap until then.
+SELECT 1;
