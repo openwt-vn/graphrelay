@@ -1,6 +1,6 @@
 name: AI Code Review
 
-# Calls the shared reusable workflow in openwt-vn/ai-code-review.
+# Calls the shared reusable workflow in openwt-vn/owlet-lens.
 #   - pull_request            -> review: post / update findings
 #   - pull_request_review_comment -> reply: judge developer replies
 #   - issue_comment "/review" -> on-demand re-review (members/collaborators)
@@ -21,11 +21,12 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-    uses: openwt-vn/ai-code-review/.github/workflows/ai-review-reusable.yml@v3
+    uses: openwt-vn/owlet-lens/.github/workflows/ai-review-reusable.yml@v1
     secrets:
       MODELSTACK_API_KEY: ${{ secrets.MODELSTACK_API_KEY }}
       AI_REVIEW_RESOLVE_TOKEN: ${{ secrets.AI_REVIEW_RESOLVE_TOKEN }}
-    # with:
-    #   strict: true               # fail the check on blocking findings
-    #   severity-threshold: high
-    #   runner: '["ubuntu-latest"]' # default is '["self-hosted"]'
+    with:
+      # This repository is public: its jobs must run on GitHub-hosted runners, never on our own.
+      # (The default of the shared workflow is '["self-hosted"]'.)
+      runner: '["ubuntu-latest"]'
+    # Other inputs: strict (fail the check on blocking findings), severity-threshold.
