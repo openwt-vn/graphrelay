@@ -18,7 +18,7 @@ jobs:
         include:
           # macOS Apple Silicon
           - target: aarch64-apple-darwin
-            os: macos-14
+            os: macos-15
             strip: strip -x
 
           # macOS Intel (x86_64-apple-darwin) is NOT built: `ort` (ONNX Runtime bindings)
