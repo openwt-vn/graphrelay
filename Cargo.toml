@@ -87,7 +87,7 @@ tree-sitter-objc        = "3.0"
 tree-sitter-groovy      = "0.1"
 # Latest (0.25.x/0.26.x) is ABI 15; 0.24.5 is the newest ABI-14 release, and
 # (like dart above) still uses the older `language()` binding shape.
-tree-sitter-powershell  = "=0.24.5"
+tree-sitter-powershell  = "=0.26.6"
 # Phase C (Plan 19) — config/markup formats. Not a "real language" grammar
 # the way Phase A's are, but a real, non-cosmetic gap: ERPNext (this
 # project's own benchmark corpus) has more .json files than .py files.
