@@ -17,7 +17,7 @@ gr setup
 ```
 
 `gr setup` detects that OpenCode is installed, injects the MCP server entry
-into `~/.claude/claude_desktop_config.json` (which OpenCode reads), and appends the
+into `opencode.json` in your project root, and appends the
 instruction block to `AGENTS.md` in your project root.
 
 ---
@@ -39,15 +39,16 @@ Skip it, and the MCP server sits there connected but effectively dormant — ava
 
 ### Step 1 — Register the MCP server
 
-OpenCode reads `~/.claude/claude_desktop_config.json` (same config as Claude Code).
-Add your project:
+Add the server to `opencode.json` in your project root (or `~/.config/opencode/opencode.json`):
 
 ```json
 {
-  "mcpServers": {
-    "your-project": {
-      "type": "http",
-      "url":  "http://localhost:3030/your-project/mcp"
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "graphrelay": {
+      "type": "remote",
+      "url": "http://localhost:3030/your-project/mcp",
+      "enabled": true
     }
   }
 }
@@ -92,7 +93,7 @@ reads. If OpenCode skips straight to reading files, double-check:
 
 1. `AGENTS.md` exists at the project root and contains `search_code`
 2. The daemon is running: `gr status`
-3. The MCP entry is in `~/.claude/claude_desktop_config.json`
+3. The MCP entry is in `opencode.json` (project root) under `mcp`
 4. You restarted OpenCode after adding the config
 
 ---

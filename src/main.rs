@@ -1392,13 +1392,25 @@ const SCIP_INDEXERS: &[(&str, &str, &str)] = &[
 
 // ── setup ─────────────────────────────────────────────────────────────────────
 
+enum McpTarget {
+    /// Claude Code: `claude mcp add` when the CLI exists, else a project `.mcp.json`.
+    ClaudeCode,
+    /// A JSON file with a top-level `mcpServers` map (Cursor).
+    McpServersFile(PathBuf),
+    /// A project `opencode.json` with a top-level `mcp` map.
+    OpenCodeProject(PathBuf),
+    Manual,
+}
+
 struct ToolDef {
     id:          &'static str,
     label:       &'static str,
     detected:    bool,
-    mcp_json:    Option<PathBuf>,
+    mcp:         McpTarget,
     instr_files: Vec<PathBuf>,
 }
+
+const CLAUDE_SERVER_NAME: &str = "graphrelay";
 
 fn cmd_setup(global: bool, dry_run: bool, tool_filter: Option<String>, all: bool) -> anyhow::Result<()> {
     let cwd = std::env::current_dir()?;
@@ -1422,36 +1434,35 @@ fn cmd_setup(global: bool, dry_run: bool, tool_filter: Option<String>, all: bool
             id:       "claude",
             label:    "Claude Code",
             detected: which::which("claude").is_ok() || home.join(".claude").exists(),
-            mcp_json: Some(home.join(".claude").join("claude_desktop_config.json")),
+            mcp:      McpTarget::ClaudeCode,
             instr_files: vec![cwd.join("CLAUDE.md")],
         },
         ToolDef {
             id:       "cursor",
             label:    "Cursor",
             detected: home.join(".cursor").exists(),
-            mcp_json: Some(home.join(".cursor").join("mcp.json")),
+            mcp:      McpTarget::McpServersFile(home.join(".cursor").join("mcp.json")),
             instr_files: vec![cwd.join(".cursorrules")],
         },
         ToolDef {
             id:       "opencode",
             label:    "OpenCode",
             detected: which::which("opencode").is_ok(),
-            // OpenCode reads the same file as Claude Code.
-            mcp_json: Some(home.join(".claude").join("claude_desktop_config.json")),
+            mcp:      McpTarget::OpenCodeProject(cwd.join("opencode.json")),
             instr_files: vec![cwd.join("AGENTS.md")],
         },
         ToolDef {
             id:       "amp",
             label:    "Amp",
             detected: which::which("amp").is_ok(),
-            mcp_json: None, // MCP config format not yet confirmed
+            mcp:      McpTarget::Manual,
             instr_files: vec![cwd.join("AGENTS.md")],
         },
         ToolDef {
             id:       "codex",
             label:    "Codex",
             detected: which::which("codex").is_ok(),
-            mcp_json: None, // config path varies by version
+            mcp:      McpTarget::Manual,
             instr_files: vec![cwd.join("AGENTS.md")],
         },
     ];
@@ -1524,7 +1535,7 @@ fn run_setup_for(
     slug:    &str,
     mcp_url: &str,
     home:    &std::path::Path,
-    _cwd:    &std::path::Path,
+    cwd:     &std::path::Path,
     global:  bool,
     dry_run: bool,
 ) -> anyhow::Result<()> {
@@ -1539,14 +1550,33 @@ fn run_setup_for(
     // ── MCP config ────────────────────────────────────────────────────────────
     println!("MCP server  ({slug} → {mcp_url}):");
     for t in tools {
-        match &t.mcp_json {
-            None => {
+        match &t.mcp {
+            McpTarget::Manual => {
                 println!("  {} (skip): MCP injection not yet supported for this tool", t.label);
                 println!("    Add manually: {mcp_url}");
             }
-            Some(path) => {
+            McpTarget::ClaudeCode => match setup_claude_mcp(cwd, mcp_url, dry_run) {
+                Ok((changed, how)) => println!(
+                    "  ✓ {}  {}  ({how})",
+                    t.label,
+                    if changed { "registered" } else { "already configured" }
+                ),
+                Err(e) => {
+                    println!("  ✗ {}  error: {e}", t.label);
+                    println!("    Run manually: claude mcp add --transport http {CLAUDE_SERVER_NAME} {mcp_url}");
+                }
+            },
+            McpTarget::McpServersFile(path) => {
                 if !seen_mcp.insert(path.clone()) { continue; }
                 match setup_inject_mcp(path, slug, mcp_url, dry_run) {
+                    Ok(true)  => println!("  ✓ {}  →  {}", t.label, path.display()),
+                    Ok(false) => println!("  ✓ {}  (already configured)", t.label),
+                    Err(e)    => println!("  ✗ {}  error: {e}", t.label),
+                }
+            }
+            McpTarget::OpenCodeProject(path) => {
+                if !seen_mcp.insert(path.clone()) { continue; }
+                match setup_inject_opencode_mcp(path, CLAUDE_SERVER_NAME, mcp_url, dry_run) {
                     Ok(true)  => println!("  ✓ {}  →  {}", t.label, path.display()),
                     Ok(false) => println!("  ✓ {}  (already configured)", t.label),
                     Err(e)    => println!("  ✗ {}  error: {e}", t.label),
@@ -1584,8 +1614,21 @@ fn run_setup_for(
         println!("dry-run complete — no files were written.");
     } else {
         println!("Setup complete.");
-        println!("Restart your coding tool to load the new MCP server, then try:");
-        println!("  \"How does authentication work in this project?\"");
+        let port = mcp_url.rsplit_once("://").and_then(|(_, r)| r.split('/').next()).and_then(|h| h.rsplit_once(':')).and_then(|(_, p)| p.parse::<u16>().ok());
+        let reachable = port.is_some_and(|p| {
+            std::net::TcpStream::connect_timeout(&std::net::SocketAddr::from(([127, 0, 0, 1], p)), std::time::Duration::from_millis(500)).is_ok()
+        });
+        if reachable {
+            println!("GraphRelay server is running. Restart your coding tool to pick up the MCP server.");
+        } else {
+            println!("⚠ The GraphRelay server is not running on {mcp_url}.");
+            println!("  Start it with `gr start`; until then the tools will not connect and agents fall back to Grep/Read.");
+        }
+        if tools.iter().any(|t| matches!(t.mcp, McpTarget::ClaudeCode)) {
+            println!("Check the connection with `claude mcp list` (graphrelay should show Connected),");
+            println!("or `/mcp` inside Claude Code. If it shows failed, the server is not running.");
+        }
+        println!("Then try: \"How does authentication work in this project?\"");
         println!("You should see search_code called before any file reads.");
     }
     Ok(())
@@ -1615,7 +1658,8 @@ fn setup_inject_mcp(
     };
 
     // Idempotency check
-    if json.get("mcpServers").and_then(|s| s.get(slug)).is_some() {
+    let existing_url = json.get("mcpServers").and_then(|s| s.get(slug)).and_then(|e| e.get("url")).and_then(|u| u.as_str());
+    if existing_url == Some(mcp_url) {
         return Ok(false);
     }
 
@@ -1633,6 +1677,10 @@ fn setup_inject_mcp(
             "url":  mcp_url,
         }));
     }
+    write_json_config(config_path, &json, dry_run)
+}
+
+fn write_json_config(config_path: &std::path::Path, json: &serde_json::Value, dry_run: bool) -> anyhow::Result<bool> {
 
     if dry_run {
         return Ok(true);
@@ -1647,10 +1695,78 @@ fn setup_inject_mcp(
         std::fs::create_dir_all(dir)
             .with_context(|| format!("creating {}", dir.display()))?;
     }
-    std::fs::write(config_path, serde_json::to_string_pretty(&json)?)
+    std::fs::write(config_path, serde_json::to_string_pretty(json)?)
         .with_context(|| format!("writing {}", config_path.display()))?;
 
     Ok(true)
+}
+
+fn setup_inject_opencode_mcp(
+    config_path: &std::path::Path,
+    name:        &str,
+    mcp_url:     &str,
+    dry_run:     bool,
+) -> anyhow::Result<bool> {
+    let mut json: serde_json::Value = if config_path.exists() {
+        let content = std::fs::read_to_string(config_path)
+            .with_context(|| format!("reading {}", config_path.display()))?;
+        serde_json::from_str(&content)
+            .map_err(|e| anyhow::anyhow!("{} is not plain JSON ({e}); add the server by hand", config_path.display()))?
+    } else {
+        serde_json::json!({ "$schema": "https://opencode.ai/config.json" })
+    };
+
+    let existing_url = json.get("mcp").and_then(|m| m.get(name)).and_then(|e| e.get("url")).and_then(|u| u.as_str());
+    if existing_url == Some(mcp_url) {
+        return Ok(false);
+    }
+
+    let obj = json
+        .as_object_mut()
+        .ok_or_else(|| anyhow::anyhow!("OpenCode config root is not a JSON object"))?;
+    let servers = obj
+        .entry("mcp".to_string())
+        .or_insert_with(|| serde_json::json!({}));
+    if let Some(srv) = servers.as_object_mut() {
+        srv.insert(name.to_string(), serde_json::json!({
+            "type":    "remote",
+            "url":     mcp_url,
+            "enabled": true,
+        }));
+    }
+    write_json_config(config_path, &json, dry_run)
+}
+
+/// Registers the MCP server with Claude Code. Claude Code does not read
+/// `~/.claude/claude_desktop_config.json` (that is Claude Desktop's file); it keeps
+/// servers in `~/.claude.json` / `.mcp.json`, managed through `claude mcp`.
+fn setup_claude_mcp(cwd: &std::path::Path, mcp_url: &str, dry_run: bool) -> anyhow::Result<(bool, &'static str)> {
+    if which::which("claude").is_err() {
+        let path = cwd.join(".mcp.json");
+        let changed = setup_inject_mcp(&path, CLAUDE_SERVER_NAME, mcp_url, dry_run)?;
+        return Ok((changed, "claude CLI not found; wrote .mcp.json, approve it on first use"));
+    }
+
+    let run = |args: &[&str]| std::process::Command::new("claude").args(args).current_dir(cwd).output();
+
+    if let Ok(out) = run(&["mcp", "get", CLAUDE_SERVER_NAME]) {
+        if out.status.success() {
+            if String::from_utf8_lossy(&out.stdout).contains(mcp_url) {
+                return Ok((false, "claude mcp"));
+            }
+            if !dry_run {
+                run(&["mcp", "remove", CLAUDE_SERVER_NAME, "--scope", "local"])?;
+            }
+        }
+    }
+    if dry_run {
+        return Ok((true, "claude mcp add"));
+    }
+    let out = run(&["mcp", "add", "--transport", "http", "--scope", "local", CLAUDE_SERVER_NAME, mcp_url])?;
+    if !out.status.success() {
+        anyhow::bail!("`claude mcp add` failed: {}", String::from_utf8_lossy(&out.stderr).trim());
+    }
+    Ok((true, "claude mcp add, local scope"))
 }
 
 // Plan 23: deliberately NOT one of the tool names below — a marker tied to a
@@ -1675,6 +1791,10 @@ many file reads — this reduces token usage and improves accuracy.\n\
   contents (pass `include_source: true` for a file's full text, in place of Read)\n\
 - `trace_impact` — blast-radius before changing anything\n\
 - `watch_status` — check index freshness\n\
+\n\
+In Claude Code these appear as `mcp__graphrelay__search_code`, `mcp__graphrelay__inspect`, etc.\n\
+If they are not available, say so and ask the user to run `gr start` and `gr setup`\n\
+(check with `claude mcp list`) instead of silently falling back to Grep/Read.\n\
 \n\
 Only fall back to direct file reads when GraphRelay cannot answer (config files,\n\
 non-indexed content, binary files).\n";
@@ -1791,4 +1911,64 @@ fn cmd_scip_index(lang: &str, output: &std::path::Path) -> anyhow::Result<()> {
     println!("✓ SCIP index written to {}", output.display());
     println!("  Run `gr restart` to trigger automatic ingest.");
     Ok(())
+}
+
+#[cfg(test)]
+mod setup_tests {
+    use super::*;
+
+    #[test]
+    fn mcp_servers_file_is_written_then_idempotent_then_updated_on_url_change() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("mcp.json");
+        assert!(setup_inject_mcp(&path, "proj", "http://localhost:3030/proj/mcp", false).unwrap());
+        assert!(!setup_inject_mcp(&path, "proj", "http://localhost:3030/proj/mcp", false).unwrap());
+        assert!(setup_inject_mcp(&path, "proj", "http://localhost:4040/proj/mcp", false).unwrap());
+        let json: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
+        assert_eq!(json["mcpServers"]["proj"]["url"], "http://localhost:4040/proj/mcp");
+        assert_eq!(json["mcpServers"]["proj"]["type"], "http");
+    }
+
+    #[test]
+    fn mcp_servers_file_dry_run_writes_nothing() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("mcp.json");
+        assert!(setup_inject_mcp(&path, "proj", "http://localhost:3030/proj/mcp", true).unwrap());
+        assert!(!path.exists());
+    }
+
+    #[test]
+    fn opencode_config_uses_the_mcp_remote_shape_and_keeps_other_keys() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("opencode.json");
+        std::fs::write(&path, r#"{"theme":"dark","mcp":{"other":{"type":"local","command":["x"]}}}"#).unwrap();
+        assert!(setup_inject_opencode_mcp(&path, "graphrelay", "http://localhost:3030/p/mcp", false).unwrap());
+        assert!(!setup_inject_opencode_mcp(&path, "graphrelay", "http://localhost:3030/p/mcp", false).unwrap());
+        let json: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
+        assert_eq!(json["theme"], "dark");
+        assert_eq!(json["mcp"]["other"]["type"], "local");
+        assert_eq!(json["mcp"]["graphrelay"]["type"], "remote");
+        assert_eq!(json["mcp"]["graphrelay"]["url"], "http://localhost:3030/p/mcp");
+        assert_eq!(json["mcp"]["graphrelay"]["enabled"], true);
+    }
+
+    #[test]
+    fn opencode_config_that_is_not_plain_json_is_left_untouched() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("opencode.json");
+        std::fs::write(&path, "{ // comment\n}").unwrap();
+        assert!(setup_inject_opencode_mcp(&path, "graphrelay", "http://x/mcp", false).is_err());
+        assert_eq!(std::fs::read_to_string(&path).unwrap(), "{ // comment\n}");
+    }
+
+    #[test]
+    fn hook_block_is_appended_once_and_mentions_the_prefixed_tool_names() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("CLAUDE.md");
+        assert!(setup_inject_hook(&path, false).unwrap());
+        assert!(!setup_inject_hook(&path, false).unwrap());
+        let text = std::fs::read_to_string(&path).unwrap();
+        assert_eq!(text.matches(SETUP_HOOK_MARKER).count(), 1);
+        assert!(text.contains("mcp__graphrelay__search_code"));
+    }
 }

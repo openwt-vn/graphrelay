@@ -82,7 +82,7 @@ This detects Claude Code, Cursor, OpenCode, Amp, or Codex, registers the MCP ser
 If you'd rather wire up Claude Code by hand:
 
 ```sh
-claude mcp add your-project --transport http http://localhost:3030/your-project/mcp
+claude mcp add graphrelay --transport http http://localhost:3030/your-project/mcp
 ```
 
 Replace `your-project` with the slug shown in `gr status`. Verify it connected:
@@ -223,6 +223,6 @@ Cursor (`.cursor/mcp.json`):
 }
 ```
 
-Claude Code, manually: `claude mcp add myproject --transport http http://localhost:3030/myproject/mcp`.
+Claude Code, manually: `claude mcp add graphrelay --transport http http://localhost:3030/myproject/mcp`.
 
 `gr setup` writes the `AGENTS.md` instruction hook for OpenCode, Amp and Codex and registers the MCP server for OpenCode; for Amp and Codex it prints where to add the server URL by hand. Any other MCP client can `POST http://localhost:3030/{project}/mcp` (JSON-RPC 2.0 over HTTP).
