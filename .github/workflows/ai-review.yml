@@ -25,7 +25,8 @@ jobs:
     secrets:
       MODELSTACK_API_KEY: ${{ secrets.MODELSTACK_API_KEY }}
       AI_REVIEW_RESOLVE_TOKEN: ${{ secrets.AI_REVIEW_RESOLVE_TOKEN }}
-    # with:
-    #   strict: true               # fail the check on blocking findings
-    #   severity-threshold: high
-    #   runner: '["ubuntu-latest"]' # default is '["self-hosted"]'
+    with:
+      # This repository is public: its jobs must run on GitHub-hosted runners, never on our own.
+      # (The default of the shared workflow is '["self-hosted"]'.)
+      runner: '["ubuntu-latest"]'
+    # Other inputs: strict (fail the check on blocking findings), severity-threshold.
