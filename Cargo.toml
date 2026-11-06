@@ -58,7 +58,7 @@ tree-sitter-kotlin-ng  = "1.1"
 # 0.2, not the newer 0.5 — 0.5.0 is generated against a tree-sitter-cli that
 # emits ABI 15, incompatible with our tree-sitter 0.24 runtime
 # (`LanguageError { version: 15 }` at load time); 0.2.0 matches our ABI.
-tree-sitter-lua        = "=0.2.0"
+tree-sitter-lua        = "=0.5.0"
 tree-sitter-swift      = "0.6"
 tree-sitter-scala      = "0.23"
 # Phase A (Plan 19) — graphify language-parity gap. Each version below was
