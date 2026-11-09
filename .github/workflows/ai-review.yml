@@ -21,12 +21,12 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-    uses: openwt-vn/owlet-lens/.github/workflows/ai-review-reusable.yml@v1
+    uses: openwt-vn/owlet-lens/.github/workflows/ai-review-reusable.yml@v1.1.0
     secrets:
       MODELSTACK_API_KEY: ${{ secrets.MODELSTACK_API_KEY }}
       AI_REVIEW_RESOLVE_TOKEN: ${{ secrets.AI_REVIEW_RESOLVE_TOKEN }}
     with:
       # This repository is public: its jobs must run on GitHub-hosted runners, never on our own.
-      # (The default of the shared workflow is '["self-hosted"]'.)
+      # (The shared workflow has no default runner: every caller chooses its own.)
       runner: '["ubuntu-latest"]'
     # Other inputs: strict (fail the check on blocking findings), severity-threshold.
