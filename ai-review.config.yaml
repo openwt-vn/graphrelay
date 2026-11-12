@@ -1,4 +1,4 @@
-# AI code review config. Reference: https://github.com/openwt-vn/ai-code-review/blob/main/docs/config.md
+# Owlet Lens config. Reference: https://github.com/openwt-vn/owlet-lens/blob/main/docs/config.md
 provider: github
 
 auth:

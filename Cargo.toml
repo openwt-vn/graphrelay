@@ -97,7 +97,7 @@ tree-sitter-json        = "0.24"
 # (no separate rusqlite/libsqlite3-sys cargo feature exists for it) — powers
 # the lexical (BM25, corpus-IDF-aware) candidate-generation index, the sole
 # retrieval channel since Plan 20 removed vector search. See GraphDb::lexical_search.
-rusqlite          = { version = "0.31", features = ["bundled"] }
+rusqlite          = { version = "0.41", features = ["bundled"] }
 # File watching
 notify            = "6"
 # Config
