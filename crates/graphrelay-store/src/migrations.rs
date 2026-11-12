@@ -18,6 +18,7 @@ const MIGRATIONS: &[(&str, &str)] = &[
     ("015_drop_duplicate_indexes", include_str!("migrations/015_drop_duplicate_indexes.sql")),
     ("016_go_receiver_qualified_names", include_str!("migrations/016_go_receiver_qualified_names.sql")),
     ("017_python_decorated_dedupe", include_str!("migrations/017_python_decorated_dedupe.sql")),
+    ("018_edge_resolution", include_str!("migrations/018_edge_resolution.sql")),
 ];
 
 /// Migrations whose newly-applied run means `chunk_fts` has no (or stale)
