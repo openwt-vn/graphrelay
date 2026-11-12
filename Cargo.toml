@@ -101,7 +101,7 @@ rusqlite          = { version = "0.41", features = ["bundled"] }
 # File watching
 notify            = "6"
 # Config
-toml              = "0.8"
+toml              = "1.1"
 # Static asset embedding
 rust-embed        = { version = "8", features = ["include-exclude"] }
 # CLI args
