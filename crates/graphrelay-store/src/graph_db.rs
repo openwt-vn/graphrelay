@@ -178,6 +178,13 @@ pub(crate) fn import_last_segment(raw: &str) -> String {
         .to_ascii_lowercase()
 }
 
+/// How a cross-file edge got its `to_id`. `tiebreak` is a guess (several
+/// import-matched candidates, highest in-degree wins); NULL means the edge was
+/// resolved before this column existed.
+pub(crate) const RESOLUTION_UNIQUE: &str = "unique";
+pub(crate) const RESOLUTION_IMPORT: &str = "import";
+pub(crate) const RESOLUTION_TIEBREAK: &str = "tiebreak";
+
 /// The pure decision half of `resolve_edges`: shared by the full pass and the
 /// scoped per-file pass so both make identical choices for the same edge.
 pub(crate) fn decide_resolutions(
@@ -186,14 +193,14 @@ pub(crate) fn decide_resolutions(
     sym_lang: &std::collections::HashMap<SymbolId, String>,
     sym_file: &std::collections::HashMap<SymbolId, FileId>,
     imports_by_file: &std::collections::HashMap<FileId, Vec<String>>,
-) -> Vec<(i64, SymbolId)> {
-    let mut resolutions: Vec<(i64, SymbolId)> = Vec::new();
+) -> Vec<(i64, SymbolId, &'static str)> {
+    let mut resolutions: Vec<(i64, SymbolId, &'static str)> = Vec::new();
     for (edge_id, from_id, to_name) in pending {
         let Some(from_lang) = sym_lang.get(from_id) else { continue };
         let Some(candidates) = by_name_lang.get(&(to_name.clone(), from_lang.clone())) else { continue };
 
-        let resolved_id = if candidates.len() == 1 {
-            Some(candidates[0].id)
+        let resolved = if candidates.len() == 1 {
+            Some((candidates[0].id, RESOLUTION_UNIQUE))
         } else {
             let from_file = sym_file.get(from_id).copied();
             let imports = from_file
@@ -208,28 +215,31 @@ pub(crate) fn decide_resolutions(
                 })
                 .collect();
             match matched.len() {
-                1 => Some(matched[0].id),
+                1 => Some((matched[0].id, RESOLUTION_IMPORT)),
                 // Multiple import-matched candidates sharing a type_key (e.g.
                 // two files both named `realm_model.py` on different paths) —
                 // break the remaining tie with in-degree rather than leaving a
                 // real import signal on the table entirely.
-                n if n > 1 => matched.iter().max_by_key(|c| (c.in_degree, std::cmp::Reverse(c.id))).map(|c| c.id),
+                n if n > 1 => matched
+                    .iter()
+                    .max_by_key(|c| (c.in_degree, std::cmp::Reverse(c.id)))
+                    .map(|c| (c.id, RESOLUTION_TIEBREAK)),
                 _ => None, // no import signal at all — leave unresolved
             }
         };
-        if let Some(id) = resolved_id {
-            resolutions.push((*edge_id, id));
+        if let Some((id, how)) = resolved {
+            resolutions.push((*edge_id, id, how));
         }
     }
     resolutions
 }
 
-pub(crate) fn apply_resolutions(conn: &Connection, resolutions: &[(i64, SymbolId)]) -> anyhow::Result<()> {
+pub(crate) fn apply_resolutions(conn: &Connection, resolutions: &[(i64, SymbolId, &'static str)]) -> anyhow::Result<()> {
     let tx = conn.unchecked_transaction()?;
     {
-        let mut upd = tx.prepare_cached("UPDATE edges SET to_id = ?1 WHERE id = ?2")?;
-        for (edge_id, to_id) in resolutions {
-            upd.execute(rusqlite::params![*to_id as i64, *edge_id])?;
+        let mut upd = tx.prepare_cached("UPDATE edges SET to_id = ?1, resolution = ?2 WHERE id = ?3")?;
+        for (edge_id, to_id, how) in resolutions {
+            upd.execute(rusqlite::params![*to_id as i64, *how, *edge_id])?;
         }
     }
     tx.commit()?;
@@ -1538,6 +1548,15 @@ impl GraphDb {
 
         let resolutions = decide_resolutions(&pending, &by_name_lang, &sym_lang, &sym_file, &imports_by_file);
         apply_resolutions(&conn, &resolutions)?;
+        let count = |how: &str| resolutions.iter().filter(|r| r.2 == how).count();
+        tracing::info!(
+            resolved = resolutions.len(),
+            unique = count(RESOLUTION_UNIQUE),
+            import = count(RESOLUTION_IMPORT),
+            tiebreak = count(RESOLUTION_TIEBREAK),
+            unresolved = pending.len() - resolutions.len(),
+            "edge resolution"
+        );
         Ok(resolutions.len())
     }
 
@@ -2045,5 +2064,100 @@ mod neighbor_names_plan_tests {
             assert!(plan.contains("idx_symbols_file_id"), "{plan}");
             assert!(!plan.contains("idx_edges_kind"), "scans every Calls edge per file:\n{plan}");
         }
+    }
+}
+
+#[cfg(test)]
+mod resolution_tag_tests {
+    use super::*;
+    use std::collections::HashMap;
+
+    fn cand(id: SymbolId, in_degree: i64, key: &str) -> ResolveCand {
+        ResolveCand { id, in_degree, type_key: Some(key.into()) }
+    }
+
+    #[test]
+    fn decide_resolutions_tags_unique_import_and_tiebreak() {
+        let mut by_name: HashMap<(String, String), Vec<ResolveCand>> = HashMap::new();
+        by_name.insert(("only".into(), "python".into()), vec![cand(1, 0, "a")]);
+        by_name.insert(("dup".into(), "python".into()), vec![cand(2, 0, "a"), cand(3, 0, "b")]);
+        by_name.insert(("tie".into(), "python".into()), vec![cand(4, 1, "a"), cand(5, 9, "a")]);
+        by_name.insert(("none".into(), "python".into()), vec![cand(6, 0, "x"), cand(7, 0, "y")]);
+        let sym_lang: HashMap<SymbolId, String> = [(100, "python".to_string())].into();
+        let sym_file: HashMap<SymbolId, FileId> = [(100, 1)].into();
+        let imports: HashMap<FileId, Vec<String>> = [(1, vec!["a".to_string()])].into();
+        let pending = vec![
+            (10, 100, "only".to_string()),
+            (11, 100, "dup".to_string()),
+            (12, 100, "tie".to_string()),
+            (13, 100, "none".to_string()),
+        ];
+        let out = decide_resolutions(&pending, &by_name, &sym_lang, &sym_file, &imports);
+        assert_eq!(
+            out,
+            vec![
+                (10, 1, RESOLUTION_UNIQUE),
+                (11, 2, RESOLUTION_IMPORT),
+                (12, 5, RESOLUTION_TIEBREAK),
+            ]
+        );
+    }
+
+    fn rs_file(id: FileId, path: &str) -> FileRecord {
+        FileRecord {
+            id,
+            path: path.into(),
+            checksum: 99,
+            language: Language::Rust,
+            indexed_at: "2026-01-01T00:00:00Z".into(),
+            byte_size: 256,
+        }
+    }
+
+    fn rs_sym(id: SymbolId, file_id: FileId, name: &str, path: &str) -> Symbol {
+        Symbol {
+            id,
+            file_id,
+            name: name.into(),
+            qualified_name: format!("{path}::{name}"),
+            kind: SymbolKind::Function,
+            span: Span { start_byte: 0, end_byte: 50, start_line: 0, end_line: 3 },
+            docstring: None,
+            language: Language::Rust,
+            file_path: path.into(),
+        }
+    }
+
+    fn call(from: SymbolId, to_name: &str) -> Edge {
+        Edge { from_id: from, to_id: None, to_name: Some(to_name.into()), kind: EdgeKind::Calls, source: EdgeSource::Syntax }
+    }
+
+    #[test]
+    fn resolve_edges_writes_the_method_and_leaves_ambiguous_edges_untagged() {
+        let db = GraphDb::open_in_memory().unwrap();
+        db.upsert_file(&rs_file(1, "a.rs")).unwrap();
+        db.upsert_file(&rs_file(2, "b.rs")).unwrap();
+        db.upsert_symbols(&[
+            rs_sym(1, 1, "caller", "a.rs"),
+            rs_sym(2, 1, "only_one", "a.rs"),
+            rs_sym(3, 1, "twin", "a.rs"),
+            rs_sym(4, 2, "twin", "b.rs"),
+        ])
+        .unwrap();
+        db.upsert_edges(&[call(1, "only_one"), call(1, "twin")]).unwrap();
+
+        assert_eq!(db.resolve_edges().unwrap(), 1);
+
+        let conn = db.conn.lock().unwrap();
+        let row = |name: &str| -> (Option<i64>, Option<String>) {
+            conn.query_row(
+                "SELECT to_id, resolution FROM edges WHERE to_name = ?1",
+                rusqlite::params![name],
+                |r| Ok((r.get(0)?, r.get(1)?)),
+            )
+            .unwrap()
+        };
+        assert_eq!(row("only_one"), (Some(2), Some(RESOLUTION_UNIQUE.to_string())));
+        assert_eq!(row("twin"), (None, None));
     }
 }

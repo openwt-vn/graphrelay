@@ -504,6 +504,15 @@ Open: re-measure Jev with the strict harness when a key is available, so the two
 - [ ] Question sets + pinned setup for further repos (keycloak, django, laravel, n8n candidates in ROADMAP).
 - [~] SWE-bench Verified 10-task pilot: preregistration draft (`benchmarks/dataset/tasks/SWEBENCH_PREREGISTRATION.md`) and harness (`benchmarks/dataset/swebench/swebench.py`) written; export, checkout, patch extraction, isolated daemon and the run/account flow verified with a stub agent. Not done: install `swebench` and verify `grade`, owner go-ahead on spend and a Linux x86 host, the paid run.
 
+## Plan 37 — loss audit and edge resolution tag (2026-11-09)
+
+- [x] Per-fact loss audit of the Sonnet 5.5 run: every lost fact is a detail or enumeration item, none a missing edge; test-penalty lead rejected (Q21 does not ask for tests)
+- [x] Migration 018 `edges.resolution` (unique / import / tiebreak), shared by the full and live resolve paths; counts logged as "edge resolution"; 2 unit tests
+- [x] `cargo test --workspace` (565 passed) and `cargo clippy --workspace -- -D warnings` clean
+- [x] 1-repeat Sonnet 5.5 run (`results/sot/erpnext-sonnet55-plan37-r1/`): graphrelay 68.7% vs baseline 71.6% (-2.9, CI [-9.3, +3.8]); a tie, not a result; rerun on a forced fresh index (`...-plan37-r2/`): 69.1% vs 70.1% (-1.0, CI [-9.0, +6.9])
+- [x] Re-indexed ERPNext: 10,141 ambiguous Calls edges (11.1%) remain, 1,423 tie-break guesses (1.5%)
+- [x] Receiver-aware resolution: ceiling measured and rejected (84% of ambiguous call sites are on a local variable needing type inference, 9.5% are `self` already covered by Plan 36); see Plan 37
+
 ## Progress Summary
 
 | Plan | Title | Status |
@@ -538,6 +547,7 @@ Open: re-measure Jev with the strict harness when a key is available, so the two
 | 32 | One symbol per decorated Python function | implemented 2026-11-02 (workspace tests + clippy clean, migration 017); ERPNext 30q x 3 re-run 69.6% vs 71.2% before (CI [-4.6, +1.3]), kept as a correctness fix; 44,354 -> 43,067 symbols — see `plans/32-python-decorated-dedupe.md` |
 | 35 | Python dotted-path string dispatch edges | implemented 2026-11-03 (`py_string_dispatch`, 2 unit tests, clippy clean); 26 synthesized edges on ERPNext; agent benchmark 30q x 3: 69.0% vs 69.6% before (tie), kept as a correctness fix — see `plans/35-python-string-dispatch.md` |
 | 36 | Python self.method() up the inheritance chain | implemented 2026-11-03 (`py_self_calls`, 2 unit tests); +342 edges on ERPNext (ceiling ~475, 0.5% of calls); agent benchmark 30q x 3: 70.5% (+1.5 vs Plan 35, CI [-0.4,+3.4]; tie), kept — see `plans/36-python-self-call-inheritance.md` |
+| 37 | Loss audit + edge resolution tag | implemented 2026-11-09 (migration 018, 2 unit tests); audit: no lost fact is a missing edge; two 1-repeat runs 68.7% and 69.1% vs baseline 71.6% and 70.1% (CIs span 0) — see `plans/37-edge-resolution-tag-and-loss-audit.md` |
 
 ### End-to-end smoke test (2026-05-12, gap-review pass)
 
